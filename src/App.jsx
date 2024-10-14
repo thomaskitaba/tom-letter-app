@@ -6,7 +6,6 @@ import './App.css'
 import SearchFile from './assets/components/SearchFile';
 
 function App() {
-  const [count, setCount] = useState(0)
 
   return (
     <>

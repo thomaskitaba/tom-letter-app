@@ -1,0 +1,78 @@
+-- Create the CompanyType table to store types of companies
+CREATE TABLE CompanyType (
+    CompanyTypeId INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+    CompanyName TEXT NOT NULL,
+    DataCreationDate TEXT,  -- Date the company type was created
+    Description TEXT
+);
+
+-- Create the FileType table to store types of files (letters)
+CREATE TABLE FileType (
+    FileTypeId INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+    TypeName TEXT NOT NULL,  -- Name of the file type (e.g., 'Invoice', 'Letter')
+    DataCreationDate TEXT,  -- Date the file type record was created
+    DataLastEditedDate TEXT  -- Date the file type record was last edited
+);
+
+-- Create the Company table to store information about companies
+CREATE TABLE Company (
+    CompanyId INTEGER PRIMARY KEY AUTOINCREMENT,
+    CompanyName TEXT NOT NULL,
+    CompanyAddress TEXT,
+    ContactPerson TEXT,
+    ContactEmail TEXT,
+    CompanyTypeId INTEGER,  -- Foreign key to the CompanyType table
+    DataCreationDate TEXT,  -- Date the company record was created
+    DataLastEditedDate TEXT,  -- Date the company record was last edited
+    FOREIGN KEY (CompanyTypeId) REFERENCES CompanyType(CompanyTypeId)
+);
+
+-- Create the File table to store general letter information
+CREATE TABLE File (
+    FileId INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+    FileName TEXT NOT NULL,
+    FileLocalLocation TEXT,
+    FileOnlineLocation TEXT,
+    Title TEXT,
+    DateWritten TEXT,  -- Date the letter was written
+    SenderCompanyId INTEGER,  -- Foreign key to company sending the letter
+    RecipientCompanyId INTEGER,  -- Foreign key to company receiving the letter
+    Status TEXT,  -- Status of the letter (e.g., 'Draft', 'Sent', 'Received')
+    LetterType TEXT,  -- Type of letter (e.g., 'Formal', 'Informal')
+    Content TEXT,  -- Actual content of the letter (optional)
+    Tags TEXT,  -- Keywords or tags associated with the letter
+    TypeID INTEGER,  -- Foreign key for type (reference to FileType)
+    DataCreationDate TEXT,  -- Date the file record was created
+    DataLastEditedDate TEXT,  -- Date the file record was last edited
+    FOREIGN KEY (TypeID) REFERENCES FileType(FileTypeId),
+    FOREIGN KEY (SenderCompanyId) REFERENCES Company(CompanyId),
+    FOREIGN KEY (RecipientCompanyId) REFERENCES Company(CompanyId)
+);
+
+-- Create the Outgoing table to store details of sent letters
+CREATE TABLE Outgoing (
+    OutgoingId INTEGER PRIMARY KEY AUTOINCREMENT,
+    FileId INTEGER NOT NULL,  -- Foreign key referencing the File table
+    SenderCompanyId INTEGER,  -- Foreign key referencing the Company table
+    DateSent TEXT,  -- Date the letter was sent
+    DataCreationDate TEXT,  -- Date the outgoing record was created
+    DataLastEditedDate TEXT,  -- Date the outgoing record was last edited
+    FOREIGN KEY (FileId) REFERENCES File(FileId),
+    FOREIGN KEY (SenderCompanyId) REFERENCES Company(CompanyId)
+);
+
+-- Create the Incoming table to store details of received letters
+CREATE TABLE Incoming (
+    IncomingId INTEGER PRIMARY KEY AUTOINCREMENT,
+    FileId INTEGER NOT NULL,  -- Foreign key referencing the File table
+    RecipientCompanyId INTEGER,  -- Foreign key referencing the Company table
+    DateReceived TEXT,  -- Date the letter was received
+    DataCreationDate TEXT,  -- Date the incoming record was created
+    DataLastEditedDate TEXT,  -- Date the incoming record was last edited
+    FOREIGN KEY (FileId) REFERENCES File(FileId),
+    FOREIGN KEY (RecipientCompanyId) REFERENCES Company(CompanyId)
+);
+
+
+
+-- sample data
