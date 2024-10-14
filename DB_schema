@@ -73,6 +73,37 @@ CREATE TABLE Incoming (
     FOREIGN KEY (RecipientCompanyId) REFERENCES Company(CompanyId)
 );
 
-
-
 -- sample data
+-- Sample data for CompanyType table
+INSERT INTO CompanyType (CompanyTypeId, CompanyName, DataCreationDate, Description) VALUES
+(1, 'Government', '2024-01-01', 'Government agencies and institutions'),
+(2, 'Private', '2024-01-01', 'Private sector companies'),
+(3, 'Non-Profit', '2024-01-01', 'Non-profit organizations');
+
+-- Sample data for FileType table
+INSERT INTO FileType (FileTypeId, TypeName, DataCreationDate, DataLastEditedDate) VALUES
+(1, 'Formal Letter', '2024-01-01', '2024-01-05'),
+(2, 'Informal Letter', '2024-01-01', '2024-01-05'),
+(3, 'Invoice', '2024-01-01', '2024-01-05');
+
+-- Sample data for Company table
+INSERT INTO Company (CompanyId, CompanyName, CompanyAddress, ContactPerson, ContactEmail, CompanyTypeId, DataCreationDate, DataLastEditedDate) VALUES
+(1, 'Acme Corporation', '123 Main St, Cityville', 'John Doe', 'johndoe@acme.com', 2, '2024-01-01', '2024-01-05'),
+(2, 'City Council', '456 Park Ave, Cityville', 'Jane Smith', 'janesmith@city.gov', 1, '2024-01-01', '2024-01-05'),
+(3, 'Hope Foundation', '789 Elm St, Cityville', 'Emily White', 'emily.white@hope.org', 3, '2024-01-01', '2024-01-05');
+
+-- Sample data for File table
+INSERT INTO File (FileId, FileName, FileLocalLocation, FileOnlineLocation, Title, DateWritten, SenderCompanyId, RecipientCompanyId, Status, LetterType, Content, Tags, TypeID, DataCreationDate, DataLastEditedDate) VALUES
+(1, 'Letter to City Council.pdf', '/local/path/letter1.pdf', 'http://online/path/letter1.pdf', 'Request for Approval', '2024-01-15', 1, 2, 'Sent', 'Formal', 'Content of the letter requesting approval for a project.', 'Approval, Request', 1, '2024-01-16', '2024-01-17'),
+(2, 'Invoice for Services.pdf', '/local/path/invoice1.pdf', 'http://online/path/invoice1.pdf', 'Invoice for Services Rendered', '2024-01-18', 1, 2, 'Sent', 'Formal', 'Invoice content for services rendered.', 'Invoice, Billing', 3, '2024-01-19', '2024-01-20'),
+(3, 'Thank You Note.txt', '/local/path/note1.txt', 'http://online/path/note1.txt', 'Thank You!', '2024-01-20', 3, 1, 'Sent', 'Informal', 'Thank you for your support.', 'Thank You, Gratitude', 2, '2024-01-21', '2024-01-22');
+
+-- Sample data for Outgoing table
+INSERT INTO Outgoing (OutgoingId, FileId, SenderCompanyId, DateSent, DataCreationDate, DataLastEditedDate) VALUES
+(1, 1, 1, '2024-01-16', '2024-01-16', '2024-01-17'),
+(2, 2, 1, '2024-01-19', '2024-01-19', '2024-01-20');
+
+-- Sample data for Incoming table
+INSERT INTO Incoming (IncomingId, FileId, RecipientCompanyId, DateReceived, DataCreationDate, DataLastEditedDate) VALUES
+(1, 1, 2, '2024-01-16', '2024-01-16', '2024-01-17'),
+(2, 3, 1, '2024-01-21', '2024-01-21', '2024-01-22');
