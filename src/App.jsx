@@ -4,13 +4,16 @@ import viteLogo from '/vite.svg'
 import './App.css'
 import './Normalize.css'
 
+import MyContextProvider from './components/MyContextProvider';
 import SearchFile from './components/SearchFile';
 
 function App() {
 
   return (
     <>
-      <SearchFile />
+      <MyContextProvider >
+        <SearchFile />
+      </MyContextProvider>
     </>
   )
 }
