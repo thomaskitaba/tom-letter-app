@@ -1,0 +1,8 @@
+GET http://localhost:5000/post?page=1&limit=10
+# GET http://localhost:5000/
+# Content-Type: application/json
+
+# {
+#   "page": 5,
+#   "limit": 5
+# }
