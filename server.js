@@ -6,9 +6,21 @@ import cors from "cors";
 import dotenv from 'dotenv';
 import sqlite3 from "sqlite3";
 import bodyParser from "body-parser";
+import path, { dirname } from "path";
+import { fileURLToPath } from 'url';
+
 
 // const bodyParser = require('body-parser');
 dotenv.config();
+// sqlite3 database configuration
+// Get the current file path and directory name
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+const myDatabase = path.join(__dirname, 'files.db');
+const db = new sqlite3.Database(myDatabase, sqlite3.OPEN_READWRITE, (err) => {
+  if (err) return console.error(err);
+});
 
 const router = express.Router();
 // Other ES module imports
@@ -21,7 +33,6 @@ app.use(cors());
 app.use(express.json());
 app.use("/", router);
 app.listen(5000, () => console.log("tom-letter-app Server is Running"));
-
 
 // TODO: SEND EMIAL USING nodemailer  
 const contactEmail = nodemailer.createTransport({
@@ -96,7 +107,7 @@ router.post("/order", (req, res) => {
 });
 
 // END EMAIL SENDING CODE
-
+// SAMPLE TEST JSON DATA
   const user = [
     {id: 1, name: "lema"},
     {id: 2, name: "mohammed"},
@@ -151,7 +162,146 @@ router.post("/order", (req, res) => {
     {id: 24, name: "yohannes"},
     {id: 25, name: "muluwork"}
 ];
+//  DATABASE TABLE and VIEWS
+const Files = "SELECT * FROM File";
+const Company = "SELECT * FROM Company";
+const CompanyType = "SELECT * FROM Company";
+const FileType = "SELECT * FROM FileType";
+const Incoming = "SELECT * FROM Incoming";
+const Outgoing = "SELECT * FROM Outgoing";
 
+const FilesSelect = "SELECT * FROM File WHERE FileId > ? AND FileId <= ?";
+const CompanySelect = "SELECT * FROM Company WHERE CompanyId > ? AND CompanyId <= ?";
+const CompanyTypeSelect = "SELECT * FROM CompanyType WHERE CompanyTypeId > ? AND CompanyTypeId <= ?";
+const FileTypeSelect = "SELECT * FROM FileType WHERE FileTypeId > ? AND FileTypeId <= ?";
+const IncomingSelect = "SELECT * FROM Incoming WHERE IncomingId > ? AND IncomingId <= ?";
+const OutgoingSelect = "SELECT * FROM Outgoing WHERE OutgoingId > ? AND OutgoingId <= ?";
+
+const FileQuery = "SELECT COUNT(*) as count FROM File";
+
+// SUPPORTING FUNCTIONS
+
+// PAGINATION MIDDLEWARE
+  
+const countRows = (modelQuery) => {
+  return new Promise((resolve, reject) => {
+    db.all(modelQuery, [], (err, rows) => {
+      if (err) {
+        console.log("Error fetching total rows:", err);
+        reject(err.status(500).json({ error: err.message }));
+      } else {
+        resolve(rows[0].count);  // Resolve with the count of rows
+      }
+    });
+  });
+};
+
+// PAGINATION MIDDLEWARE
+function paginateResults(model, modelSelect, modelQuery) {
+  // This is the middleware function that Express expects
+  return async (req, res, next) => {
+    try {
+      const totalRows = await countRows(modelQuery);
+      const totalPages = Math.ceil(totalRows / 10);  // Example with limit set to 10
+
+      const page = parseInt(req.query.page) || 1;  // Default page is 1 if not provided
+      const limit = parseInt(req.query.limit) || 10;  // Default limit is 10 if not provided
+      const startIndex = (page - 1) * limit;
+      const endIndex = page * limit;
+
+      const additionalInfo = {};
+
+      if (page > 1) {
+        additionalInfo.previousPage = page - 1;
+      }
+      if (page < totalPages) {
+        additionalInfo.nextPage = page + 1;
+      }
+
+      db.all(modelSelect, [startIndex, limit], (err, rows) => {
+        if (err) {
+          console.log("Error while fetching paginated results:", err);
+          return res.status(500).json({ error: err.message });
+        }
+
+        res.paginateResults = {
+          results: rows,
+          additionalInfo: {
+            ...additionalInfo,
+            totalPages,
+            totalRows,
+          },
+        };
+        next(); // Pass control to the next middleware or route handler
+      });
+    } catch (error) {
+      if (res.statusCode !== 200) {
+        return res.status(error.statusCode).json({error: "Error Fetching rowCount"});
+      }
+      
+    }
+  };
+}
+
+
+  app.get("/", paginateResults(File, FilesSelect, FileQuery), (req, res) => {
+    res.json(res.paginateResults)
+  })
+  
+router.get ("/files", paginateDB(File, FilesSelect),(req, res) => {
+  res.json(res.paginateDB);
+})
+function paginateDB(model, modelSelect) {
+  return (req, res, next) => {
+    const page = parseInt(req.query.page) || 1;   // Default to page 1
+    const limit = parseInt(req.query.limit) || 10; // Default to limit 10
+    let totalModel = 0;
+    let totalPages = 0;
+    let result = {};
+    let additionalInfo = {};
+
+    // First query to get total number of rows in the table
+    db.all(model, [], (err, rows) => {
+      if (err) {
+        console.log("Error fetching total rows:", err);
+        return res.status(500).json({ error: err.message });
+      }
+
+      totalModel = rows[0].count;
+      totalPages = Math.ceil(totalModel / limit);
+
+      if (page > 1) {
+        additionalInfo.previousPage = page - 1;
+      }
+      if (page < totalPages) {
+        additionalInfo.nextPage = page + 1;
+      }
+      additionalInfo.totalModel = totalModel;
+      additionalInfo.totalPages = totalPages;
+      additionalInfo.limit = limit;
+
+      const startIndex = (page - 1) * limit + 1; // Adjust the start index
+      const endIndex = page * limit;
+
+      // Second query to fetch the paginated data
+      db.all(modelSelect, [startIndex, endIndex], (err, rows) => {
+        if (err) {
+          console.log("Error while fetching paginated results:", err);
+          return res.status(500).json({ error: err.message });
+        }
+        result.results = rows;
+        result.additionalInfo = additionalInfo;
+
+        // Attach the results to res and move to the next middleware
+        // res.paginateDB = result;
+        console.log(result);
+        res.paginateDB.results = rows;
+        res.paginateDB.additionalInfo = additionalInfo;
+        next();
+      });
+    });
+  };
+}
 
   router.get("/user", paginateResults(user), (req, res) => {
     res.json(res.paginateResults)
@@ -160,57 +310,12 @@ router.post("/order", (req, res) => {
   router.get("/post", paginateResults(post), (req, res) => {
     res.json(res.paginateResults)
   })
-  
-  function paginateResults(model) {
 
-    return (req, res, next) => {
-      const page = parseInt(req.query.page) || 1;  // Default page is 1 if not provided or invalid
-    const originallimit = parseInt(req.query.limit);  // Parse limit from the query
-    // Check if limit is valid, else fallback to 10
-    const limit = isNaN(originallimit) ? 10 : originallimit;
-    
-    const startIndex = (page - 1) * limit;
-    const endIndex = page * limit;
-  
-    // Slicing the model array
-    const newUser = model.slice(startIndex, endIndex);
-  
-    // Optional: include total count for better pagination
-    const totalModel = model.length;
-    const totalPages = Math.ceil(totalModel/ limit)
-        
-    const result = {};
-    result.result = newUser;
-    result.totalModel = totalModel;
-    result.totalPages = totalPages;
-    result.limit = limit;
-    
-    if (page - 1 > 0) {
-        result.previousPage = page - 1
-    }
-    if (page < totalPages) {
-      result.nextPage = page + 1
-    }
-    res.paginateResults = result
-    next()
-    }
+  // PAGINATION MIDDLEWARE
+  // function paginateResults(model) {
 
-  }
-  app.get("/", paginateResults(post), (req, res) => {
-    res.json(res.paginateResults)
-  })
-
-
-
-
-
-
-
-
-
-
-  // router.get("/user", (req, res) => {
-  //   const page = parseInt(req.query.page) || 1;  // Default page is 1 if not provided or invalid
+  //   return (req, res, next) => {
+  //     const page = parseInt(req.query.page) || 1;  // Default page is 1 if not provided or invalid
   //   const originallimit = parseInt(req.query.limit);  // Parse limit from the query
   //   // Check if limit is valid, else fallback to 10
   //   const limit = isNaN(originallimit) ? 10 : originallimit;
@@ -218,31 +323,30 @@ router.post("/order", (req, res) => {
   //   const startIndex = (page - 1) * limit;
   //   const endIndex = page * limit;
   
-  //   // Slicing the users array
-  //   const newUser = user.slice(startIndex, endIndex);
+  //   // Slicing the model array
+  //   const newUser = model.slice(startIndex, endIndex);
   
   //   // Optional: include total count for better pagination
-  //   const totalUsers = user.length;
-  //   const totalPages = Math.ceil(totalUsers / limit)
-    
+  //   const totalModel = model.length;
+  //   const totalPages = Math.ceil(totalModel/ limit)
+        
   //   const result = {};
   //   result.result = newUser;
-  //   result.totalUsers = totalUsers;
+  //   result.totalModel = totalModel;
   //   result.totalPages = totalPages;
   //   result.limit = limit;
+    
   //   if (page - 1 > 0) {
   //       result.previousPage = page - 1
   //   }
   //   if (page < totalPages) {
   //     result.nextPage = page + 1
   //   }
-    
-  //   // todo: test print
-  //   // console.log(`limit before: ${originallimit}`);
-  //   // console.log(`limit after: ${limit}`);
-  //   // console.log(`totalUsers: ${totalUsers}`);
-  //   // console.log(`total pages: ${result.totalPages}`);
+  //   res.paginateResults = result
+  //   next()
+  //   }
 
-  //   // Respond with the result
-  //   res.json(result);
-  // });
+  // }
+  // app.get("/", paginateResults(post), (req, res) => {
+  //   res.json(res.paginateResults)
+  // })
