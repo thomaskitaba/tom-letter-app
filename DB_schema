@@ -96,18 +96,11 @@ INSERT INTO Company (CompanyId, CompanyName, CompanyAddress, ContactPerson, Cont
 INSERT INTO File (FileId, FileName, FileLocalLocation, FileOnlineLocation, Title, DateWritten, SenderCompanyId, RecipientCompanyId, Status, LetterType, Content, Tags, TypeID, DataCreationDate, DataLastEditedDate) VALUES
 (1, 'Letter to City Council.pdf', '/local/path/letter1.pdf', 'http://online/path/letter1.pdf', 'Request for Approval', '2024-01-15', 1, 2, 'Sent', 'Formal', 'Content of the letter requesting approval for a project.', 'Approval, Request', 1, '2024-01-16', '2024-01-17'),
 (2, 'Invoice for Services.pdf', '/local/path/invoice1.pdf', 'http://online/path/invoice1.pdf', 'Invoice for Services Rendered', '2024-01-18', 1, 2, 'Sent', 'Formal', 'Invoice content for services rendered.', 'Invoice, Billing', 3, '2024-01-19', '2024-01-20'),
-(3, 'Thank You Note.txt', '/local/path/note1.txt', 'http://online/path/note1.txt', 'Thank You!', '2024-01-20', 3, 1, 'Sent', 'Informal', 'Thank you for your support.', 'Thank You, Gratitude', 2, '2024-01-21', '2024-01-22'),
-(4, 'Project Proposal.pdf', '/local/path/proposal1.pdf', 'http://online/path/proposal1.pdf', 'Project Proposal', '2024-01-25', 2, 3, 'Sent', 'Formal', 'Content of the project proposal for consideration.', 'Proposal, Project', 1, '2024-01-26', '2024-01-27'),
-(5, 'Meeting Minutes.docx', '/local/path/minutes1.docx', 'http://online/path/minutes1.docx', 'Minutes of Meeting', '2024-01-28', 1, 3, 'Sent', 'Formal', 'Minutes of the meeting held on project discussions.', 'Meeting, Minutes', 2, '2024-01-29', '2024-01-30'),
-(6, 'Contract Agreement.pdf', '/local/path/contract1.pdf', 'http://online/path/contract1.pdf', 'Contract Agreement', '2024-02-02', 1, 4, 'Sent', 'Formal', 'Contract for services between two parties.', 'Contract, Agreement', 3, '2024-02-03', '2024-02-04'),
-(7, 'Job Offer Letter.pdf', '/local/path/joboffer1.pdf', 'http://online/path/joboffer1.pdf', 'Job Offer', '2024-02-05', 3, 5, 'Sent', 'Formal', 'Job offer to a candidate for a senior position.', 'Offer, Job', 1, '2024-02-06', '2024-02-07'),
-(8, 'Termination Letter.docx', '/local/path/termination1.docx', 'http://online/path/termination1.docx', 'Termination Notice', '2024-02-10', 1, 2, 'Sent', 'Formal', 'Letter for termination of contract.', 'Termination, Contract', 2, '2024-02-11', '2024-02-12'),
-(9, 'Request for Proposal.pdf', '/local/path/rfp1.pdf', 'http://online/path/rfp1.pdf', 'Request for Proposal', '2024-02-15', 4, 1, 'Sent', 'Formal', 'Request for proposal to multiple vendors.', 'Proposal, Request', 1, '2024-02-16', '2024-02-17'),
-(10, 'Memorandum of Understanding.pdf', '/local/path/mou1.pdf', 'http://online/path/mou1.pdf', 'Memorandum of Understanding', '2024-02-18', 5, 1, 'Sent', 'Formal', 'MOU between two parties for partnership.', 'MOU, Partnership', 3, '2024-02-19', '2024-02-20'),
-(11, 'Annual Report.pdf', '/local/path/report1.pdf', 'http://online/path/report1.pdf', 'Annual Report', '2024-03-01', 1, 4, 'Sent', 'Formal', 'The annual report detailing the company\'s performance.', 'Report, Annual', 2, '2024-03-02', '2024-03-03'),
-(12, 'Partnership Agreement.docx', '/local/path/partnership1.docx', 'http://online/path/partnership1.docx', 'Partnership Agreement', '2024-03-05', 1, 3, 'Sent', 'Formal', 'Agreement for partnership between two organizations.', 'Agreement, Partnership', 1, '2024-03-06', '2024-03-07'),
-(13, 'Service Agreement.pdf', '/local/path/service1.pdf', 'http://online/path/service1.pdf', 'Service Agreement', '2024-03-10', 2, 4, 'Sent', 'Formal', 'Agreement for services rendered by one party.', 'Agreement, Service', 2, '2024-03-11', '2024-03-12'),
-(14, 'Notice of Meeting.docx', '/local/path/meetingnotice1.docx', 'http://online/path/meetingnotice1.docx', 'Notice of Meeting', '2024-03-15', 3, 2, 'Sent', 'Formal', 'Notice for an upcoming meeting between the parties.', 'Meeting, Notice', 3, '2024-03-16', '2024-03-17');
+(3, 'Thank You Note.txt', '/local/path/note1.txt', 'http://online/path/note1.txt', 'Thank You!', '2024-01-20', 3, 1, 'Sent', 'Informal', 'Thank you for your support.', 'Thank You, Gratitude', 2, '2024-01-21', '2024-01-22');
+
+
+
+
 
 -- Sample data for Outgoing table
 INSERT INTO Outgoing (OutgoingId, FileId, SenderCompanyId, DateSent, DataCreationDate, DataLastEditedDate) VALUES

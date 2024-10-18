@@ -248,60 +248,7 @@ function paginateResults(model, modelSelect, modelQuery) {
     res.json(res.paginateResults)
   })
   
-router.get ("/files", paginateDB(File, FilesSelect),(req, res) => {
-  res.json(res.paginateDB);
-})
-function paginateDB(model, modelSelect) {
-  return (req, res, next) => {
-    const page = parseInt(req.query.page) || 1;   // Default to page 1
-    const limit = parseInt(req.query.limit) || 10; // Default to limit 10
-    let totalModel = 0;
-    let totalPages = 0;
-    let result = {};
-    let additionalInfo = {};
 
-    // First query to get total number of rows in the table
-    db.all(model, [], (err, rows) => {
-      if (err) {
-        console.log("Error fetching total rows:", err);
-        return res.status(500).json({ error: err.message });
-      }
-
-      totalModel = rows[0].count;
-      totalPages = Math.ceil(totalModel / limit);
-
-      if (page > 1) {
-        additionalInfo.previousPage = page - 1;
-      }
-      if (page < totalPages) {
-        additionalInfo.nextPage = page + 1;
-      }
-      additionalInfo.totalModel = totalModel;
-      additionalInfo.totalPages = totalPages;
-      additionalInfo.limit = limit;
-
-      const startIndex = (page - 1) * limit + 1; // Adjust the start index
-      const endIndex = page * limit;
-
-      // Second query to fetch the paginated data
-      db.all(modelSelect, [startIndex, endIndex], (err, rows) => {
-        if (err) {
-          console.log("Error while fetching paginated results:", err);
-          return res.status(500).json({ error: err.message });
-        }
-        result.results = rows;
-        result.additionalInfo = additionalInfo;
-
-        // Attach the results to res and move to the next middleware
-        // res.paginateDB = result;
-        console.log(result);
-        res.paginateDB.results = rows;
-        res.paginateDB.additionalInfo = additionalInfo;
-        next();
-      });
-    });
-  };
-}
 
   router.get("/user", paginateResults(user), (req, res) => {
     res.json(res.paginateResults)
