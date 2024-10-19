@@ -44,7 +44,7 @@ app.listen(5000, () => console.log("tom-letter-app Server is Running"));
 // TODO: API Middleware
 const authenticate = (req, res, next) => {
   const providedApiKey = req.headers['x-api-key'] || req.query.apiKey;
-  const apiKey = process.env.API_KEY || 'NlunpyC9eK22pDD2PIMPHsfIF6e7uKiZHcehy1KNJP'; // Use environment variable or predefined key
+  const apiKey = process.env.API_KEY
   
   if (providedApiKey && providedApiKey === apiKey) {
     next(); // Proceed to the next middleware/route handler
@@ -52,9 +52,11 @@ const authenticate = (req, res, next) => {
     res.status(401).json({ error: 'Unauthorized' });
   }
 };
-
 // Apply middleware to specific routes, for example, '/api'
 app.use('/api', authenticate);
+// todo: end of middleware
+
+
 
 // TODO: SEND EMIAL USING nodemailer 
 const contactEmail = nodemailer.createTransport({
@@ -128,7 +130,7 @@ router.post("/order", (req, res) => {
   });
 });
 
-// END EMAIL SENDING CODE
+// todo: end of EMAIL SENDING CODE
 // SAMPLE TEST JSON DATA
   const user = [
     {id: 1, name: "lema"},
@@ -202,7 +204,6 @@ const OutgoingSelect = "SELECT * FROM Outgoing WHERE OutgoingId > ? AND Outgoing
 const FileQuery = "SELECT COUNT(*) as count FROM File";
 
 // SUPPORTING FUNCTIONS
-
 // PAGINATION MIDDLEWARE
   
 const countRows = (modelQuery) => {
@@ -218,7 +219,7 @@ const countRows = (modelQuery) => {
   });
 };
 
-// PAGINATION MIDDLEWARE
+// TODO: PAGINATION MIDDLEWARE
 function paginateResults(model, modelSelect, modelQuery) {
   // This is the middleware function that Express expects
   return async (req, res, next) => {
@@ -263,10 +264,12 @@ function paginateResults(model, modelSelect, modelQuery) {
   };
 }
 
+
   app.get("/api", paginateResults(File, FilesSelect, FileQuery), (req, res) => {
     res.json(res.paginateResults)
   })
-  // =============== END OF PAGINATION ================
+
+  // todo: =============== END OF PAGINATION ================
   
   let query = ''
   let tableSelect = ''
@@ -294,11 +297,10 @@ function paginateResults(model, modelSelect, modelQuery) {
       const response = await axios.post('/', { tableName: tableName }, {
         headers: {
           'Content-type': 'application/json',
-          'x-api-key': apikey,
+          'x-api-key': apiKey,
         }
       });
-
-      console.log("");
+      console.log("Successfull");
     } catch (error) {
       res.status(500).json({ message: 'Unable to confirm' });
     }
