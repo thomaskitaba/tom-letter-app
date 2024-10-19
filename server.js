@@ -13,10 +13,7 @@ import axios from "axios";
 // const bodyParser = require('body-parser');
 dotenv.config();
 
-
-
 // Apply authentication middleware to all routes that need protection
-
 
 // TODO:sqlite3 database configuration
 // Get the current file path and directory name
@@ -44,7 +41,7 @@ app.listen(5000, () => console.log("tom-letter-app Server is Running"));
 // TODO: API Middleware
 const authenticate = (req, res, next) => {
   const providedApiKey = req.headers['x-api-key'] || req.query.apiKey;
-  const apiKey = process.env.API_KEY
+  const apiKey = process.env.VITE_API_KEY;
   
   if (providedApiKey && providedApiKey === apiKey) {
     next(); // Proceed to the next middleware/route handler
@@ -55,8 +52,6 @@ const authenticate = (req, res, next) => {
 // Apply middleware to specific routes, for example, '/api'
 app.use('/api', authenticate);
 // todo: end of middleware
-
-
 
 // TODO: SEND EMIAL USING nodemailer 
 const contactEmail = nodemailer.createTransport({
@@ -271,13 +266,15 @@ function paginateResults(model, modelSelect, modelQuery) {
 
   // todo: =============== END OF PAGINATION ================
   
-  let query = ''
+  let table = ''
   let tableSelect = ''
   let tableQuery = ''
   
   app.get("/paginate", async (req, res) => {
 
-    tableName = req.query.tableName;
+    const tableName = req.query.tableName;
+    const limit = parseInt(req.query.limit) || 1;
+    const page = parseInt(req.query.page) || 10;
 
     // set the the global variable to be used while pagination
     table = `SELECT * FROM ${tableName}`
@@ -293,17 +290,24 @@ function paginateResults(model, modelSelect, modelQuery) {
       tableQuery = `SELECT * FROM ${tableName} WHERE OutgoingId > ? AND OutgoingIds <= ?`;
     }
     // use axios to make request for "/"
-    try {
-      const response = await axios.post('/', { tableName: tableName }, {
-        headers: {
-          'Content-type': 'application/json',
-          'x-api-key': apiKey,
-        }
-      });
-      console.log("Successfull");
-    } catch (error) {
-      res.status(500).json({ message: 'Unable to confirm' });
-    }
+    // Use axios to make request for "/api"
+  try {
+    const response = await axios.post('/api', {
+      tableName: tableName,
+      countQuery: tableSelect,
+      query: tableQuery
+    }, {
+      headers: {
+        'Content-type': 'application/json',
+        'x-api-key': apiKey,
+      }
+    });
+    console.log("Successful");
+    res.json(response.data); // Send the response data back to the client
+  } catch (error) {
+    console.error("Error in /test:", error);
+    res.status(500).json({ message: 'Unable to confirm' });
+  }
   })
 
   // 
