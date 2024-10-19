@@ -99,9 +99,6 @@ INSERT INTO File (FileId, FileName, FileLocalLocation, FileOnlineLocation, Title
 (3, 'Thank You Note.txt', '/local/path/note1.txt', 'http://online/path/note1.txt', 'Thank You!', '2024-01-20', 3, 1, 'Sent', 'Informal', 'Thank you for your support.', 'Thank You, Gratitude', 2, '2024-01-21', '2024-01-22');
 
 
-
-
-
 -- Sample data for Outgoing table
 INSERT INTO Outgoing (OutgoingId, FileId, SenderCompanyId, DateSent, DataCreationDate, DataLastEditedDate) VALUES
 (1, 1, 1, '2024-01-16', '2024-01-16', '2024-01-17'),

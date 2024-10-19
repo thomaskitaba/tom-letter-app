@@ -8,11 +8,17 @@ import sqlite3 from "sqlite3";
 import bodyParser from "body-parser";
 import path, { dirname } from "path";
 import { fileURLToPath } from 'url';
-
+import axios from "axios";
 
 // const bodyParser = require('body-parser');
 dotenv.config();
-// sqlite3 database configuration
+
+
+
+// Apply authentication middleware to all routes that need protection
+
+
+// TODO:sqlite3 database configuration
 // Get the current file path and directory name
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -21,6 +27,7 @@ const myDatabase = path.join(__dirname, 'files.db');
 const db = new sqlite3.Database(myDatabase, sqlite3.OPEN_READWRITE, (err) => {
   if (err) return console.error(err);
 });
+
 
 const router = express.Router();
 // Other ES module imports
@@ -34,7 +41,22 @@ app.use(express.json());
 app.use("/", router);
 app.listen(5000, () => console.log("tom-letter-app Server is Running"));
 
-// TODO: SEND EMIAL USING nodemailer  
+// TODO: API Middleware
+const authenticate = (req, res, next) => {
+  const providedApiKey = req.headers['x-api-key'] || req.query.apiKey;
+  const apiKey = process.env.API_KEY || 'NlunpyC9eK22pDD2PIMPHsfIF6e7uKiZHcehy1KNJP'; // Use environment variable or predefined key
+  
+  if (providedApiKey && providedApiKey === apiKey) {
+    next(); // Proceed to the next middleware/route handler
+  } else {
+    res.status(401).json({ error: 'Unauthorized' });
+  }
+};
+
+// Apply middleware to specific routes, for example, '/api'
+app.use('/api', authenticate);
+
+// TODO: SEND EMIAL USING nodemailer 
 const contactEmail = nodemailer.createTransport({
   service: 'gmail',
   auth: {
@@ -205,10 +227,10 @@ function paginateResults(model, modelSelect, modelQuery) {
       const totalPages = Math.ceil(totalRows / 10);  // Example with limit set to 10
 
       const page = parseInt(req.query.page) || 1;  // Default page is 1 if not provided
-      const limit = parseInt(req.query.limit) || 10;  // Default limit is 10 if not provided
+      const originallimit = parseInt(req.query.limit) || 10;  // Default limit is 10 if not provided
+      const limit = isNaN(originallimit) ? 10 : originallimit;
       const startIndex = (page - 1) * limit;
       const endIndex = page * limit;
-
       const additionalInfo = {};
 
       if (page > 1) {
@@ -218,12 +240,11 @@ function paginateResults(model, modelSelect, modelQuery) {
         additionalInfo.nextPage = page + 1;
       }
 
-      db.all(modelSelect, [startIndex, limit], (err, rows) => {
+      db.all(modelSelect, [startIndex, endIndex], (err, rows) => {
         if (err) {
           console.log("Error while fetching paginated results:", err);
           return res.status(500).json({ error: err.message });
         }
-
         res.paginateResults = {
           results: rows,
           additionalInfo: {
@@ -238,18 +259,52 @@ function paginateResults(model, modelSelect, modelQuery) {
       if (res.statusCode !== 200) {
         return res.status(error.statusCode).json({error: "Error Fetching rowCount"});
       }
-      
     }
   };
 }
 
-
-  app.get("/", paginateResults(File, FilesSelect, FileQuery), (req, res) => {
+  app.get("/api", paginateResults(File, FilesSelect, FileQuery), (req, res) => {
     res.json(res.paginateResults)
   })
+  // =============== END OF PAGINATION ================
   
+  let query = ''
+  let tableSelect = ''
+  let tableQuery = ''
+  
+  app.get("/paginate", async (req, res) => {
 
+    tableName = req.query.tableName;
 
+    // set the the global variable to be used while pagination
+    table = `SELECT * FROM ${tableName}`
+    tableSelect = `SELECT COUNT(*) as count FROM ${table}`
+
+    if (tableName == "File") {
+      tableQuery = `SELECT * FROM ${tableName} WHERE FileId > ? AND FileId <= ?`; 
+    }  else if (tableName == "Company") {
+      tableQuery = `SELECT * FROM ${tableName} WHERE CompanyId > ? AND CompanyId <= ?`;
+    } else if (tableName == "Incoming") {
+      tableQuery = `SELECT * FROM ${tableName} WHERE IncomingId > ? AND IncomingId <= ?`;
+    } else if (tableName == "Outgoing") {
+      tableQuery = `SELECT * FROM ${tableName} WHERE OutgoingId > ? AND OutgoingIds <= ?`;
+    }
+    // use axios to make request for "/"
+    try {
+      const response = await axios.post('/', { tableName: tableName }, {
+        headers: {
+          'Content-type': 'application/json',
+          'x-api-key': apikey,
+        }
+      });
+
+      console.log("");
+    } catch (error) {
+      res.status(500).json({ message: 'Unable to confirm' });
+    }
+  })
+
+  // 
   router.get("/user", paginateResults(user), (req, res) => {
     res.json(res.paginateResults)
   });
@@ -260,23 +315,18 @@ function paginateResults(model, modelSelect, modelQuery) {
 
   // PAGINATION MIDDLEWARE
   // function paginateResults(model) {
-
   //   return (req, res, next) => {
   //     const page = parseInt(req.query.page) || 1;  // Default page is 1 if not provided or invalid
   //   const originallimit = parseInt(req.query.limit);  // Parse limit from the query
   //   // Check if limit is valid, else fallback to 10
   //   const limit = isNaN(originallimit) ? 10 : originallimit;
-    
   //   const startIndex = (page - 1) * limit;
   //   const endIndex = page * limit;
-  
   //   // Slicing the model array
   //   const newUser = model.slice(startIndex, endIndex);
-  
   //   // Optional: include total count for better pagination
   //   const totalModel = model.length;
   //   const totalPages = Math.ceil(totalModel/ limit)
-        
   //   const result = {};
   //   result.result = newUser;
   //   result.totalModel = totalModel;
@@ -292,7 +342,6 @@ function paginateResults(model, modelSelect, modelQuery) {
   //   res.paginateResults = result
   //   next()
   //   }
-
   // }
   // app.get("/", paginateResults(post), (req, res) => {
   //   res.json(res.paginateResults)
