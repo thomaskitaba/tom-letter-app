@@ -9,8 +9,16 @@ import bodyParser from "body-parser";
 import path, { dirname } from "path";
 import { fileURLToPath } from 'url';
 import axios from "axios";
-
+import fs from "fs";
 // const bodyParser = require('body-parser');
+const router = express.Router();
+const app = express();
+app.use(cors());
+app.use(express.json());
+app.use("/", router);
+app.listen(5000, () => console.log("tom-letter-app Server is Running"));
+
+
 dotenv.config();
 
 // Apply authentication middleware to all routes that need protection
@@ -26,17 +34,17 @@ const db = new sqlite3.Database(myDatabase, sqlite3.OPEN_READWRITE, (err) => {
 });
 
 
-const router = express.Router();
 // Other ES module imports
 // require('dotenv').config();
 const password = process.env.VITE_PASSWORD;
 const email = process.env.VITE_EMAIL;
 // server used to send send emails
-const app = express();
-app.use(cors());
-app.use(express.json());
-app.use("/", router);
-app.listen(5000, () => console.log("tom-letter-app Server is Running"));
+
+let table = ''
+let tableSelect = ''
+let tableQuery = ''
+const pdfFolderPath = path.join(__dirname, 'files'); // Ensure the path is correct
+app.use('/files', express.static(pdfFolderPath)); // Serving the files folder
 
 // TODO: API Middleware
 const authenticate = (req, res, next) => {
@@ -259,16 +267,13 @@ function paginateResults(model, modelSelect, modelQuery) {
   };
 }
 
-
   app.get("/api", paginateResults(File, FilesSelect, FileQuery), (req, res) => {
     res.json(res.paginateResults)
   })
 
   // todo: =============== END OF PAGINATION ================
   
-  let table = ''
-  let tableSelect = ''
-  let tableQuery = ''
+ 
   
   app.get("/paginate", async (req, res) => {
 
@@ -310,14 +315,23 @@ function paginateResults(model, modelSelect, modelQuery) {
   }
   })
 
-  // 
-  router.get("/user", paginateResults(user), (req, res) => {
-    res.json(res.paginateResults)
-  });
+  
 
-  router.get("/post", paginateResults(post), (req, res) => {
-    res.json(res.paginateResults)
-  })
+
+
+  // TODO: FILE VIEWER
+  
+
+// Route to get the list of PDF files
+app.get('/pdfs', (req, res) => {
+  fs.readdir(pdfFolderPath, (err, files) => {
+    if (err) {
+      return res.status(500).send('Unable to scan directory');
+    }
+    const pdfFiles = files.filter(file => file.endsWith('.pdf'));
+    res.json(pdfFiles);
+  });
+});
 
   // PAGINATION MIDDLEWARE
   // function paginateResults(model) {

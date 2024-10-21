@@ -1,3 +1,2 @@
 http://localhost:5000/api?page=3&limit=3&apiKey=NlunpyC9eK22pDD2PIMPHsfIF6e7uKiZHcehy1KNJP
-# http://localhost:5000/paginate?tableName=File&page=3&limit=3
 

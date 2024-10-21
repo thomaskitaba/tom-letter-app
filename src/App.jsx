@@ -6,13 +6,17 @@ import './Normalize.css'
 
 import MyContextProvider from './components/MyContextProvider';
 import SearchFile from './components/SearchFile';
-
+import PdfViewer from './components/test'
+import FileDatabase from './components/FileDatabase';
 function App() {
 
   return (
     <>
       <MyContextProvider >
-        <SearchFile />
+        {/* <SearchFile /> */}
+        <FileDatabase />
+        <PdfViewer />
+       
       </MyContextProvider>
     </>
   )
