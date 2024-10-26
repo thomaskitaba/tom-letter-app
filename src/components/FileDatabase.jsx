@@ -1,11 +1,12 @@
 import axios from "axios";
 import React, { useState, useEffect, useContext } from "react";
 import MyContext from "./MyContext";
-
+import {FileText, FileEarmarkText, ArrowRight, ArrowLeft } from 'react-bootstrap-icons';
 const FileDatabase = () => {
+
     const [files, setFiles] = useState([]);
-    const [limit, setLimit] = useState(3);
-    const [page, setPage] = useState(1);
+    const [limit, setLimit] = useState(5);
+    const [page, setPage] = useState(3);
     const [totalPages, setTotalPages] = useState(1);
     const [searchTerm, setSearchTerm] = useState(""); // New state for search term
     const { endpoint, apiKey } = useContext(MyContext);  // Assume endpoint and apiKey come from MyContext
@@ -19,11 +20,9 @@ const FileDatabase = () => {
                         'Content-type': 'application/json',
                     }
                 });
-
                 setFiles(response.data.results);
                 setTotalPages(response.data.additionalInfo.totalPages); // Handle total pages for pagination
-
-                console.log(response.data.results);
+                // console.log(response.data.results);
             } catch (error) {
                 console.error('Error fetching PDF files:', error);
             }
@@ -39,7 +38,7 @@ const FileDatabase = () => {
     );
 
     return (
-        <div style={{ color: 'red' }}>
+        <div >
             <h1>File Database</h1>
 
             {/* Search input to filter files */}
@@ -50,7 +49,6 @@ const FileDatabase = () => {
                 onChange={(e) => setSearchTerm(e.target.value)}
                 style={{ marginBottom: '20px', padding: '5px' }}
             />
-
             <div>
                 {filteredFiles.length > 0 ? (
                     filteredFiles.map((file) => (
@@ -58,14 +56,18 @@ const FileDatabase = () => {
                             <h3>{file.FileName}</h3>
                             <p><strong>Title:</strong> {file.Title}</p>
                             <p><strong>Status:</strong> {file.Status}</p>
-
+                            
                             {/* Display PDF thumbnail, click to open file */}
-                            <img
+                            <FileText 
+                            style={{fontSize: '50px', cursor: 'pointer'}}
+                            onClick={() => window.open(`http://localhost:5000/files/${file.FileLocalLocation}`, '_blank')}
+                            />
+                            {/* <img
                                 src="/pdf-thumbnail.png" // You can replace this with actual thumbnail generation
                                 alt={file.FileName}
                                 onClick={() => window.open(`http://localhost:5000/files/${file.FileLocalLocation}`, '_blank')}
                                 style={{ cursor: 'pointer', width: '100px', height: '140px', padding: '50px', border: '2px solid', backgroundColor: 'green' }}
-                            />
+                            /> */}
                         </div>
                     ))
                 ) : (
@@ -74,19 +76,21 @@ const FileDatabase = () => {
             </div>
             <div>
                 {/* Pagination buttons */}
+               
                 <button 
-                    disabled={page === 1} 
-                    onClick={() => setPage(page - 1)}
+                    disabled={page <= 1} 
+                    onClick={() => {console.log(page); setPage(page - 1)}}
                 >
-                    Previous
+                    <ArrowLeft style={{ fontSize: '1.25rem'}}/>
                 </button>
                 <button 
-                    disabled={page === totalPages} 
-                    onClick={() => setPage(page + 1)}
+                    disabled={page >= totalPages} 
+                    onClick={() => { console.log(page);setPage(page + 1)}}
                 >
-                    Next
+                    <ArrowRight style={{ fontSize: '1.25rem'}} />
                 </button>
             </div>
+            <div><p>prev:{page - 1} cur:{page} next:{page + 1}</p></div>
         </div>
     );
 };

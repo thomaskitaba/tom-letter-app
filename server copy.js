@@ -11,10 +11,7 @@ import path, { dirname } from "path";
 import { fileURLToPath } from 'url';
 import axios from "axios";
 import fs from "fs";
-import multer from 'multer';
-
-
-
+// const bodyParser = require('body-parser');
 const router = express.Router();
 const app = express();
 app.use(cors());
@@ -24,7 +21,6 @@ app.listen(5000, () => console.log("tom-letter-app Server is Running"));
 
 
 dotenv.config();
-
 
 // Apply authentication middleware to all routes that need protection
 // TODO:sqlite3 database configuration
@@ -50,20 +46,9 @@ let tableQuery = ''
 const pdfFolderPath = path.join(__dirname, 'files'); // Ensure the path is correct
 app.use('/files', express.static(pdfFolderPath)); // Serving the files folder
 
-
-//todo: Set up storage to save files in the "files" folder
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, path.join(__dirname, 'files'));
-  },
-  filename: (req, file, cb) => {
-    cb(null, file.originalname);
-  }
-});
-
 // TODO: API Middleware
 const authenticate = (req, res, next) => {
-  const providedApiKey = req.headers['apiKey'] || req.query.apiKey;
+  const providedApiKey = req.headers['x-api-key'] || req.query.apiKey;
   const apiKey = process.env.VITE_API_KEY;
   
   if (providedApiKey && providedApiKey === apiKey) {
@@ -221,7 +206,6 @@ const OutgoingSelect = "SELECT * FROM Outgoing WHERE OutgoingId > ? AND Outgoing
 
 const FileQuery = "SELECT COUNT(*) as count FROM File";
 
-
 // SUPPORTING FUNCTIONS
 // PAGINATION MIDDLEWARE
   
@@ -244,7 +228,7 @@ function paginateResults(model, modelSelect, modelQuery) {
   return async (req, res, next) => {
     try {
       const totalRows = await countRows(modelQuery);
-      
+      const totalPages = Math.ceil(totalRows / 10);  // Example with limit set to 10
 
       const page = parseInt(req.query.page) || 1;  // Default page is 1 if not provided
       const originallimit = parseInt(req.query.limit) || 10;  // Default limit is 10 if not provided
@@ -252,7 +236,7 @@ function paginateResults(model, modelSelect, modelQuery) {
       const startIndex = (page - 1) * limit;
       const endIndex = page * limit;
       const additionalInfo = {};
-      const totalPages = Math.ceil(totalRows / limit);
+
       if (page > 1) {
         additionalInfo.previousPage = page - 1;
       }
@@ -332,6 +316,9 @@ function paginateResults(model, modelSelect, modelQuery) {
   })
 
   
+
+
+
   // TODO: FILE VIEWER
   
 
@@ -346,30 +333,36 @@ app.get('/pdfs', (req, res) => {
   });
 });
 
-// TODO: DOWNLOAD and UPLOAD
-// const multer = require('multer');
-// const path = require('path');
-
-
-
-// File filter to allow only specific file types
-const fileFilter = (req, file, cb) => {
-  const fileTypes = /jpeg|jpg|png|pdf/; // Allowed file extensions
-  const extname = fileTypes.test(path.extname(file.originalname).toLowerCase()); // Check extension
-  const mimetype = fileTypes.test(file.mimetype); // Check MIME type
-
-  if (extname && mimetype) {
-    return cb(null, true); // File type is allowed
-  } else {
-    cb(new Error('Error: Only PDFs, JPEGs, and PNGs are allowed!'), false); // Reject file
-  }
-};
-
-// Initialize multer with storage and file filter
-const upload = multer({ storage, fileFilter });
-
-app.post('/api/upload', upload.array('files', 10), (req, res) => {
-  // 'files' is the field name for the file input
-  // 10 is the maximum number of files to upload
-  res.json({ message: 'Files uploaded successfully', files: req.files });
-});
+  // PAGINATION MIDDLEWARE
+  // function paginateResults(model) {
+  //   return (req, res, next) => {
+  //     const page = parseInt(req.query.page) || 1;  // Default page is 1 if not provided or invalid
+  //   const originallimit = parseInt(req.query.limit);  // Parse limit from the query
+  //   // Check if limit is valid, else fallback to 10
+  //   const limit = isNaN(originallimit) ? 10 : originallimit;
+  //   const startIndex = (page - 1) * limit;
+  //   const endIndex = page * limit;
+  //   // Slicing the model array
+  //   const newUser = model.slice(startIndex, endIndex);
+  //   // Optional: include total count for better pagination
+  //   const totalModel = model.length;
+  //   const totalPages = Math.ceil(totalModel/ limit)
+  //   const result = {};
+  //   result.result = newUser;
+  //   result.totalModel = totalModel;
+  //   result.totalPages = totalPages;
+  //   result.limit = limit;
+    
+  //   if (page - 1 > 0) {
+  //       result.previousPage = page - 1
+  //   }
+  //   if (page < totalPages) {
+  //     result.nextPage = page + 1
+  //   }
+  //   res.paginateResults = result
+  //   next()
+  //   }
+  // }
+  // app.get("/", paginateResults(post), (req, res) => {
+  //   res.json(res.paginateResults)
+  // })

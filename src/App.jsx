@@ -6,17 +6,21 @@ import './Normalize.css'
 
 import MyContextProvider from './components/MyContextProvider';
 import SearchFile from './components/SearchFile';
-import PdfViewer from './components/test'
+import PdfViewer from './components/test';
 import FileDatabase from './components/FileDatabase';
+import FileDB from './components/FileDB';
+import Upload from './components/Upload';
+
 function App() {
 
   return (
     <>
       <MyContextProvider >
+        <Upload />
         {/* <SearchFile /> */}
+        {/* <FileDB /> */}
         <FileDatabase />
-        <PdfViewer />
-       
+        {/* <PdfViewer /> */}
       </MyContextProvider>
     </>
   )
