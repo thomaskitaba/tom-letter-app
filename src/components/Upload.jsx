@@ -19,24 +19,26 @@ function Upload() {
 
   const handleUpload = async (event) => {
     event.preventDefault();
+
     if (files.length === 0) {
       setShowUploadProgress(true);
       setMessage("Please select at least one file!");
       setShowProgress(false);
       return;
     }
+
     setShowUploadProgress(true);
     setShowProgress(false);
     setUploadProgress(0);
     setMessage('Upload In Progress');
-  
+
     const formData = new FormData();
     for (let i = 0; i < files.length; i++) {
       formData.append('files', files[i]);
     }
-  
+
     try {
-      const response = await axios.post(endpoint, formData, {
+      const response = await axios.post('http://localhost:5000/api/upload', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
@@ -48,14 +50,14 @@ function Upload() {
           setShowUploadButton(false);
         }
       });
-  
+
       setFiles([]); // Reset files state
       if (inputFileRef.current) {
         inputFileRef.current.value = ''; // Clear the input value
       }
-      setFiles([]);
-      await new Promise(resolve => setTimeout(resolve, 0)); // Allow state update
-  
+
+      console.log(response.data);
+
       setShowUploadProgress(false);
       setShowProgress(false);
       setShowUploadButton(true);
@@ -67,7 +69,6 @@ function Upload() {
       setMessage('Upload failed. Please try again.');
     }
   };
-  
 
   return (
     <>
@@ -94,9 +95,9 @@ function Upload() {
             right: '20px'
           }} />
           <div style={{ margin: '10px' }}>{message}</div>
-          {showProgress && 
-            <div 
-              role="progressbar" 
+          {showProgress &&
+            <div
+              role="progressbar"
               style={{
                 backgroundColor: 'blue',
                 width: `${uploadProgress - 6}%`,
@@ -104,7 +105,8 @@ function Upload() {
                 position: 'absolute',
                 left: '10px',
                 top: '80px'
-              }} />
+              }}
+            />
           }
         </div>
       }
@@ -112,16 +114,15 @@ function Upload() {
       <form onSubmit={handleUpload}>
         <label htmlFor="file-upload" style={{ display: 'none' }}>Upload</label>
         <input 
-          ref={inputFileRef} 
-          id="file-upload"  
+          ref={inputFileRef}
+          id="file-upload" 
           type="file" 
           accept=".pdf, .jpeg, .jpg, .png" 
           multiple 
-          onChange={handleFileChange} 
+          onChange={handleFileChange}
           onClick={() => setShowUploadProgress(false)}
         />
-        {/* Optionally expose the state for testing */}
-        <div data-testid="file-length" style={{display: 'none'}}>{files.length}</div>
+        <div data-testid="file-length" >{files.length}</div>
         {showUploadButton && <button type="submit">Upload Files</button>}
       </form>
     </>
