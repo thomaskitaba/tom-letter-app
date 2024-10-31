@@ -2,6 +2,8 @@ import axios from "axios";
 import React, { useState, useEffect, useContext } from "react";
 import MyContext from "./MyContext";
 import {FileText, FileEarmarkText, ArrowRight, ArrowLeft } from 'react-bootstrap-icons';
+
+
 const FileDatabase = () => {
 
     const [files, setFiles] = useState([]);
@@ -38,9 +40,8 @@ const FileDatabase = () => {
     );
 
     return (
-        <div >
+        <div className="bg-green-400 pl-4">
             <h1>File Database</h1>
-
             {/* Search input to filter files */}
             <input
                 type="text"
@@ -49,10 +50,10 @@ const FileDatabase = () => {
                 onChange={(e) => setSearchTerm(e.target.value)}
                 style={{ marginBottom: '20px', padding: '5px' }}
             />
-            <div>
+            <div className="bg-green-200 pl-4">
                 {filteredFiles.length > 0 ? (
                     filteredFiles.map((file) => (
-                        <div key={file.FileId} style={{ marginBottom: '20px' }}>
+                        <div key={file.FileId} >
                             <h3>{file.FileName}</h3>
                             <p><strong>Title:</strong> {file.Title}</p>
                             <p><strong>Status:</strong> {file.Status}</p>

@@ -12,7 +12,7 @@ function Upload() {
   const [showUploadButton, setShowUploadButton] = useState(true);
   const { apiKey, endpoint } = useContext(MyContext);
   const inputFileRef = useRef(null);
-
+  
   const handleFileChange = (event) => {
     setFiles(event.target.files);
   };
@@ -72,13 +72,11 @@ function Upload() {
 
   return (
     <>
-      {showUploadProgress && 
-        <div style={{
+    {/* style={{
           backgroundColor: 'lightgrey',
           border: '2px grey solid',
           width: '350px',
           height: '150px',
-          borderRadius: '20px',
           position: 'absolute',
           top: '50%',
           left: '50%',
@@ -87,29 +85,29 @@ function Upload() {
           flexDirection: 'column',
           justifyContent: 'center',
           alignItems: 'center'
-        }}>
+        }} */}
+
+      {showUploadProgress && 
+        <div className="bg-gray-200 border-2 border-gray-500 w-[350px] h-[150px] absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 flex flex-col justify-center items-center"
+>
           <X onClick={() => setShowUploadProgress(false)} style={{
             fontSize: '40px',
             position: 'absolute',
             top: '10px',
             right: '20px'
           }} />
+         
           <div style={{ margin: '10px' }}>{message}</div>
           {showProgress &&
             <div
               role="progressbar"
-              style={{
-                backgroundColor: 'blue',
-                width: `${uploadProgress - 6}%`,
-                height: '20px',
-                position: 'absolute',
-                left: '10px',
-                top: '80px'
-              }}
+              className="bg-blue-700  h-[20px] absolute left-[10px] top-[85px]"
+              style={{width: `${uploadProgress - 6}%`}}
             />
           }
         </div>
       }
+      <div className="flex-row gap-4 p-4 bg-red-400">
       <h1>Upload</h1>
       <form onSubmit={handleUpload}>
         <label htmlFor="file-upload" style={{ display: 'none' }}>Upload</label>
@@ -122,11 +120,16 @@ function Upload() {
           onChange={handleFileChange}
           onClick={() => setShowUploadProgress(false)}
         />
-        <div data-testid="file-length" >{files.length}</div>
-        {showUploadButton && <button type="submit">Upload Files</button>}
+        <div data-testid="file-length" style={{display: 'none'}} >{files.length}</div>
+        {showUploadButton && <button type="submit" className="bg-blue-400 rounded px-4 py-2  hover:bg-blue-600">Upload Files</button>}
       </form>
+      </div>
     </>
   );
 }
 
 export default Upload;
+
+
+
+
