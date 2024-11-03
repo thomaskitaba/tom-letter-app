@@ -1,1 +1,44 @@
 http://localhost:5000/api?page=3&limit=2&apiKey=NlunpyC9eK22pDD2PIMPHsfIF6e7uKiZHcehy1KNJP
+# POST http://localhost:5000/api/scannforviruses&file=@./testUpload.jpeg&Content-Type=multipart/form-data&apiKey=NlunpyC9eK22pDD2PIMPHsfIF6e7uKiZHcehy1KNJP
+# curl --request POST \
+#      --url https://www.virustotal.com/api/v3/files \
+#      --header 'accept: application/json' \
+#      --header 'content-type: multipart/form-data' \
+#      --header 'x-apikey: e362a563b3f6bef40513e74e3d5097d1f32c4f5bef5ebb0cf22394f0f6de330e' \
+#      --form file='@testScan.pdf'
+
+# curl --request POST \
+#   --url "https://www.virustotal.com/vtapi/v2/file/scan" \
+#   --form "apikey=e362a563b3f6bef40513e74e3d5097d1f32c4f5bef5ebb0cf22394f0f6de330e" \
+#   --form "file=@testScann.pdf"
+# output: 
+#     {
+#   "data": {
+#     "type": "analysis",
+#     "id": "YzdjNzI0OTU1NWQ2NmM2NzM3YjI0YjU2ZjU1YWIzYWU6MTczMDQ4NDQ1Ng==",
+#     "links": {
+#       "self": "https://www.virustotal.com/api/v3/analyses/YzdjNzI0OTU1NWQ2NmM2NzM3YjI0YjU2ZjU1YWIzYWU6MTczMDQ4NDQ1Ng=="
+#     }
+#   }
+# }
+
+
+# # curl --request GET \
+# #   --url "https://www.virustotal.com/api/v3/analyses/YzdjNzI0OTU1NWQ2NmM2NzM3YjI0YjU2ZjU1YWIzYWU6MTczMDQ4NDQ1Ng==" \
+# #   --header "x-apikey: e362a563b3f6bef40513e74e3d5097d1f32c4f5bef5ebb0cf22394f0f6de330e"
+# output: 
+# {
+#   "data": {
+#     "engines": {
+        
+#     },
+#     "attributes": {
+#       "stats": {
+#         "malicious": 5,
+#         "suspicious": 0,
+#         "undetected": 65,
+#         "harmless": 2
+#       }
+#     }
+#   }
+# }

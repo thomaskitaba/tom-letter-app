@@ -51,10 +51,7 @@ function Upload() {
         }
       });
 
-      setFiles([]); // Reset files state
-      if (inputFileRef.current) {
-        inputFileRef.current.value = ''; // Clear the input value
-      }
+      
 
       console.log(response.data);
 
@@ -65,28 +62,20 @@ function Upload() {
     } catch (error) {
       console.error('Error uploading files', error);
       setShowUploadProgress(false);
+      
       setShowProgress(false);
       setMessage('Upload failed. Please try again.');
     }
+    setFiles([]); // Reset files state
+      if (inputFileRef.current) {
+        inputFileRef.current.value = ''; // Clear the input value
+      }
+    setShowUploadButton(true);
   };
 
   return (
     <>
-    {/* style={{
-          backgroundColor: 'lightgrey',
-          border: '2px grey solid',
-          width: '350px',
-          height: '150px',
-          position: 'absolute',
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'center',
-          alignItems: 'center'
-        }} */}
-
+    
       {showUploadProgress && 
         <div className="bg-gray-200 border-2 border-gray-500 w-[350px] h-[150px] absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 flex flex-col justify-center items-center"
 >
