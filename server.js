@@ -247,8 +247,7 @@ function paginateResults(model, modelSelect, modelQuery) {
 
   // todo: =============== END OF PAGINATION ================
   
- 
-  
+
   app.get("/paginate", async (req, res) => {
 
     const tableName = req.query.tableName;
@@ -288,7 +287,6 @@ function paginateResults(model, modelSelect, modelQuery) {
     res.status(500).json({ message: 'Unable to confirm' });
   }
   })
-
   
   // TODO: FILE VIEWER
   
@@ -304,8 +302,6 @@ app.get('/pdfs', (req, res) => {
 });
 
 // TODO: SCANN FOR VIRUS 
-
-
 
 const checkFileAnalyses = async (scanId) => {
   try {
