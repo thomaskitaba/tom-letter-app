@@ -2,6 +2,8 @@ import React, { useState, useContext, useRef } from 'react';
 import axios from 'axios';
 import MyContext from './MyContext';
 import { X } from 'react-bootstrap-icons';
+import {delay} from './Utility';
+
 
 function Upload() {
   const [files, setFiles] = useState([]);
@@ -17,6 +19,8 @@ function Upload() {
     setFiles(event.target.files);
   };
 
+  
+
   const handleUpload = async (event) => {
     event.preventDefault();
 
@@ -26,11 +30,10 @@ function Upload() {
       setShowProgress(false);
       return;
     }
-
     setShowUploadProgress(true);
     setShowProgress(false);
     setUploadProgress(0);
-    setMessage('Upload In Progress');
+    setMessage('Scanning for virus then Uploading In Progress');
 
     const formData = new FormData();
     for (let i = 0; i < files.length; i++) {
@@ -38,7 +41,7 @@ function Upload() {
     }
 
     try {
-      const response = await axios.post('http://localhost:5000/api/upload', formData, {
+      const response = await axios.post('http://localhost:5000/api/scanupload', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
@@ -51,16 +54,17 @@ function Upload() {
         }
       });
 
-      
-
       console.log(response.data);
-
+      setMessage('Upload successful!');
+      await delay(3000);
       setShowUploadProgress(false);
       setShowProgress(false);
-      setShowUploadButton(true);
-      setMessage('Upload successful!');
+     
+    
     } catch (error) {
       console.error('Error uploading files', error);
+
+      delay(3000)
       setShowUploadProgress(false);
       
       setShowProgress(false);
@@ -75,7 +79,6 @@ function Upload() {
 
   return (
     <>
-    
       {showUploadProgress && 
         <div className="bg-gray-200 border-2 border-gray-500 w-[350px] h-[150px] absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 flex flex-col justify-center items-center"
 >
@@ -96,13 +99,14 @@ function Upload() {
           }
         </div>
       }
-      <div className="flex-row gap-4 p-4 bg-red-400">
+      <div className="flex-row gap-4 p-4 bg-yellow-400">
       <h1>Upload</h1>
       <form onSubmit={handleUpload}>
         <label htmlFor="file-upload" style={{ display: 'none' }}>Upload</label>
         <input 
           ref={inputFileRef}
           id="file-upload" 
+          name="files"
           type="file" 
           accept=".pdf, .jpeg, .jpg, .png" 
           multiple 
@@ -118,6 +122,7 @@ function Upload() {
 }
 
 export default Upload;
+
 
 
 

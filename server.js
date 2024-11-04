@@ -13,6 +13,7 @@ import axios from "axios";
 import fs from "fs";
 import multer from 'multer';
 import FormData from 'form-data';
+import { delay } from "./src/components/Utility";
 
 const router = express.Router();
 const app = express();
@@ -309,7 +310,6 @@ const checkFileAnalyses = async (scanId) => {
       headers: {
         'x-apikey': virusTotal,
       }
-      
     });
     // console.log("inside Check file Analysis==============");
     // console.log(response.data.data.attributes.stats);
@@ -321,21 +321,18 @@ const checkFileAnalyses = async (scanId) => {
   }
 };
 
-
 const checkFileWithVirusTotal = async () => {
   const formData = new FormData();
-  const filePath = 'testScann.pdf'; // Ensure this path is correct
-  
-  // Check if the file exists
-  if (!fs.existsSync(filePath)) {
-    throw new Error(`File not found: ${filePath}`);
-  }
 
-  formData.append('file', fs.createReadStream(filePath));
-  // console.log("==================================");
-  // console.log(formData)
-  // console.log("==================================");
- 
+  // todo: test using testScann.pad
+  // const filePath = 'testScann.pdf'; // Ensure this path is correct
+  // // Check if the file exists
+  // if (!fs.existsSync(filePath)) {
+  //   throw new Error(`File not found: ${filePath}`);
+  // }
+  // formData.append('file', fs.createReadStream(filePath));
+//  todo:  end of testdata configurartion
+  
   try {
     // Make the API call to VirusTotal
     const headers = formData.getHeaders();  // output is { content-type: multipart/json --bounary}
@@ -370,46 +367,138 @@ const checkFileWithVirusTotal = async () => {
 //   .catch(error => console.error('Error:', error.message));
 
 // TODO virsu check middleware
+Storage = multer.memoryStorage();
+upload = multer({ storage});
+
+// todo: original code
+// const virusCheckMiddleware = async (req, res, next) => {
+//   // console.log(JSON.stringify(req.files))
+//   if (req.files && req.files.length > 0) {
+
+//     try {
+//       console.log(req.files)
+//       const response = await checkFileWithVirusTotal(req.files[0]);
+//       console.log("Malicious score:", response.malicious); // Log the score for debugging
+
+//       // Check for a non-malicious file (adjusted to simulate your test case)
+//       if (response && response.malicious == 0) {
+//         console.log("File is safe to upload");
+//         return next(); // Only call next if the file is safe
+//       } else {
+//         // If the file is malicious or an error is flagged, respond with an error
+//         console.log("File is malicious or an error occurred");
+//         return res.status(400).json({ error: response.error || "File is malicious" });
+//       }
+//     } catch (error) {
+//       console.error("Error scanning file:", error);
+//       return res.status(500).json({ error: "Error occurred while scanning for viruses." });
+//     }
+//   } else {
+//     // No files uploaded; return an error
+//     return res.status(400).json({ error: 'No files uploaded' });
+//   }
+// };
+// app.post('/api/upload', upload.array('files', 4), async (req, res) => {
+//   console.log("inside upload route");
+//   console.log(req.files)
+//   try {
+//     // Assuming the file is safe after the middleware check
+//     res.json({ message: 'File uploaded and scanned successfully', result: req.files });
+//   } catch (error) {
+//     console.log({
+//       'Message': "Error occurred while processing the upload",
+//       error: error.message
+//     });
+//     res.status(500).json({ message: 'Error occurred during file upload' });
+//   }
+// });
+
 
 const virusCheckMiddleware = async (req, res, next) => {
-  if (req.files && req.files.length > 0) {
-    try {
-      const response = await checkFileWithVirusTotal(req.files[0]);
-      console.log("Malicious score:", response.malicious); // Log the score for debugging
 
-      // Check for a non-malicious file (adjusted to simulate your test case)
-      if (response && response.malicious === 10) {
-        console.log("File is safe to upload");
-        return next(); // Only call next if the file is safe
-      } else {
-        // If the file is malicious or an error is flagged, respond with an error
-        console.log("File is malicious or an error occurred");
-        return res.status(400).json({ error: response.error || "File is malicious" });
+  safeFiles = [];
+  unsafeFiles = [];
+
+  // if (req.files.length < 5){ 
+    // the file to be scaned by virusTotal
+    const file = req.files;
+    const uploadPerMinute = 4;
+
+for (let j = 0; j < file.length; i = i + 4) {
+      // TODO: check if i + 4  is greater than file.length
+      // if 
+      if (((j * uploadPerMinute) + uploadPerMinute) > file.length ){
+        uploadPerMinute = file.length - (j * uploadPerMinute)
       }
-    } catch (error) {
-      console.error("Error scanning file:", error);
-      return res.status(500).json({ error: "Error occurred while scanning for viruses." });
+      for(let i = j * uploadPerMinute; i < i + uploadPerMinute ; i++) {
+        try{
+          const response = await checkFileWithVirusTotal(file[i])
+          // delay(10);
+          if (response && response.malicious === 0) {
+            safeFiles.push(file[i]);
+          }else {
+            unsafeFiles.push(file[i]);
+          }
+          // if (response.statusCode !== 200) {
+          //   throw new error({"message": "Error while scanning files"})
+          // }
+        }catch(error) {
+          console.log(`Error occured while scanning ${file.originalname}`);
+          // res.status(500).json({"message": "Error while scanning files"})
+        }
+        
+      }
+      delay(1010);
     }
-  } else {
-    // No files uploaded; return an error
-    return res.status(400).json({ error: 'No files uploaded' });
-  }
-};
+    if (safeFiles.length == 0) {
+      req.files = safeFiles;
+      return next();
+    }
+    else{
+      res.status(400).json({"Message": 'all files are unsafe'})
+    }
+    if (unsafeFiles != 0) {
+      res.locals.unsafeFiles = unsafeFiles;
+    }
+  // }
+}
+
+storage = multer.memoryStorage()
+upload = multer({storage})
+
+app.post('/api/upload', upload.array('files', 4)), virusCheckMiddleware, async(req, res) => {
+    const savedFiles = [];
+    const unsavedFiles = [];
+    
+    if (req.files && req.files.length > 0) {
+      for (let i = 0; req.files.length; i++) {
+        // the file about to be saved from memory to diskstorage
+        const file = req.files[i]
+        const savePath = path(__dirname, 'files', file.originalname);
+        try {
+          // we can use   fs.writeFileSync(savePath, file.buffer)
+          fs.writeFile(savePath, file.buffer, (err) => {
+            if (err) {
+              // console.log(`error occured while saving ${req.files[i].originalname}`);
+              unsavedFiles.push(file.originalname);
+            } else {
+              savedFiles.push(file.originalname);
+            }
+          });
+        }catch(error) {
+          console.log('error encountered while saving file');
+        }
+      } 
+      res.status(200).json({"unsavedFiles": unsavedFiles, "savedFiles": savedFiles, "unsafeFiles": res.locals.unsafeFiles})
+    }
+    else {
+        console.log('every file is unsafe');
+    }
+}
 
 
-// Main upload route
-app.post('/api/upload', virusCheckMiddleware, upload.array('files', 4), async (req, res) => {
-  try {
-    // Assuming the file is safe after the middleware check
-    res.json({ message: 'File uploaded and scanned successfully', result: req.files });
-  } catch (error) {
-    console.log({
-      'Message': "Error occurred while processing the upload",
-      error: error.message
-    });
-    res.status(500).json({ message: 'Error occurred during file upload' });
-  }
-});
+
+
 
 
         

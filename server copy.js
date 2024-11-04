@@ -11,7 +11,9 @@ import path, { dirname } from "path";
 import { fileURLToPath } from 'url';
 import axios from "axios";
 import fs from "fs";
-// const bodyParser = require('body-parser');
+import multer from 'multer';
+import FormData from 'form-data';
+
 const router = express.Router();
 const app = express();
 app.use(cors());
@@ -21,6 +23,7 @@ app.listen(5000, () => console.log("tom-letter-app Server is Running"));
 
 
 dotenv.config();
+
 
 // Apply authentication middleware to all routes that need protection
 // TODO:sqlite3 database configuration
@@ -38,6 +41,7 @@ const db = new sqlite3.Database(myDatabase, sqlite3.OPEN_READWRITE, (err) => {
 // require('dotenv').config();
 const password = process.env.VITE_PASSWORD;
 const email = process.env.VITE_EMAIL;
+const virusTotal=process.env.VITE_VIRUSTOTALKEY;
 // server used to send send emails
 
 let table = ''
@@ -46,9 +50,34 @@ let tableQuery = ''
 const pdfFolderPath = path.join(__dirname, 'files'); // Ensure the path is correct
 app.use('/files', express.static(pdfFolderPath)); // Serving the files folder
 
+
+//todo: Set up storage to save files in the "files" folder
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, path.join(__dirname, 'files'));
+  },
+  filename: (req, file, cb) => {
+    cb(null, file.originalname);
+  }
+});
+// File filter to allow only specific file types
+const fileFilter = (req, file, cb) => {
+  const fileTypes = /jpeg|jpg|png|pdf/; // Allowed file extensions
+  const extname = fileTypes.test(path.extname(file.originalname).toLowerCase()); // Check extension
+  const mimetype = fileTypes.test(file.mimetype); // Check MIME type
+  
+  if (extname && mimetype) {
+    return cb(null, true); // File type is allowed
+  } else {
+    cb(new Error('Error: Only PDFs, JPEGs, and PNGs are allowed!'), false); // Reject file
+  }
+};
+// Initialize multer with storage and file filter
+const upload = multer({ storage, fileFilter });
+
 // TODO: API Middleware
 const authenticate = (req, res, next) => {
-  const providedApiKey = req.headers['x-api-key'] || req.query.apiKey;
+  const providedApiKey = req.headers['apiKey'] || req.query.apiKey;
   const apiKey = process.env.VITE_API_KEY;
   
   if (providedApiKey && providedApiKey === apiKey) {
@@ -134,61 +163,7 @@ router.post("/order", (req, res) => {
 });
 
 // todo: end of EMAIL SENDING CODE
-// SAMPLE TEST JSON DATA
-  const user = [
-    {id: 1, name: "lema"},
-    {id: 2, name: "mohammed"},
-    {id: 3, name: "fatima"},
-    {id: 4, name: "samir"},
-    {id: 5, name: "nina"},
-    {id: 6, name: "khalid"},
-    {id: 7, name: "layla"},
-    {id: 8, name: "yusuf"},
-    {id: 9, name: "ahmed"},
-    {id: 10, name: "zara"},
-    {id: 11, name: "amina"},
-    {id: 12, name: "omar"},
-    {id: 13, name: "sara"},
-    {id: 14, name: "raheem"},
-    {id: 15, name: "lila"},
-    {id: 16, name: "tariq"},
-    {id: 17, name: "salma"},
-    {id: 18, name: "hamza"},
-    {id: 19, name: "nour"},
-    {id: 20, name: "hassan"},
-    {id: 21, name: "dalia"},
-    {id: 22, name: "farid"},
-    {id: 23, name: "ranya"},
-    {id: 24, name: "zain"},
-    {id: 25, name: "amira"}
-  ];
-  const post = [
-    {id: 1, name: "abebe"},
-    {id: 2, name: "kebede"},
-    {id: 3, name: "alem"},
-    {id: 4, name: "birhanu"},
-    {id: 5, name: "meseret"},
-    {id: 6, name: "mekonnen"},
-    {id: 7, name: "selam"},
-    {id: 8, name: "tewodros"},
-    {id: 9, name: "amanuel"},
-    {id: 10, name: "seble"},
-    {id: 11, name: "alemayehu"},
-    {id: 12, name: "mulu"},
-    {id: 13, name: "tirunesh"},
-    {id: 14, name: "dera"},
-    {id: 15, name: "sahle"},
-    {id: 16, name: "ayele"},
-    {id: 17, name: "fikre"},
-    {id: 18, name: "mariam"},
-    {id: 19, name: "temesgen"},
-    {id: 20, name: "genet"},
-    {id: 21, name: "hailu"},
-    {id: 22, name: "negus"},
-    {id: 23, name: "hanna"},
-    {id: 24, name: "yohannes"},
-    {id: 25, name: "muluwork"}
-];
+
 //  DATABASE TABLE and VIEWS
 const Files = "SELECT * FROM File";
 const Company = "SELECT * FROM Company";
@@ -228,15 +203,14 @@ function paginateResults(model, modelSelect, modelQuery) {
   return async (req, res, next) => {
     try {
       const totalRows = await countRows(modelQuery);
-      const totalPages = Math.ceil(totalRows / 10);  // Example with limit set to 10
-
+      
       const page = parseInt(req.query.page) || 1;  // Default page is 1 if not provided
       const originallimit = parseInt(req.query.limit) || 10;  // Default limit is 10 if not provided
       const limit = isNaN(originallimit) ? 10 : originallimit;
       const startIndex = (page - 1) * limit;
       const endIndex = page * limit;
       const additionalInfo = {};
-
+      const totalPages = Math.ceil(totalRows / limit);
       if (page > 1) {
         additionalInfo.previousPage = page - 1;
       }
@@ -273,8 +247,7 @@ function paginateResults(model, modelSelect, modelQuery) {
 
   // todo: =============== END OF PAGINATION ================
   
- 
-  
+
   app.get("/paginate", async (req, res) => {
 
     const tableName = req.query.tableName;
@@ -314,14 +287,9 @@ function paginateResults(model, modelSelect, modelQuery) {
     res.status(500).json({ message: 'Unable to confirm' });
   }
   })
-
   
-
-
-
   // TODO: FILE VIEWER
   
-
 // Route to get the list of PDF files
 app.get('/pdfs', (req, res) => {
   fs.readdir(pdfFolderPath, (err, files) => {
@@ -333,36 +301,123 @@ app.get('/pdfs', (req, res) => {
   });
 });
 
-  // PAGINATION MIDDLEWARE
-  // function paginateResults(model) {
-  //   return (req, res, next) => {
-  //     const page = parseInt(req.query.page) || 1;  // Default page is 1 if not provided or invalid
-  //   const originallimit = parseInt(req.query.limit);  // Parse limit from the query
-  //   // Check if limit is valid, else fallback to 10
-  //   const limit = isNaN(originallimit) ? 10 : originallimit;
-  //   const startIndex = (page - 1) * limit;
-  //   const endIndex = page * limit;
-  //   // Slicing the model array
-  //   const newUser = model.slice(startIndex, endIndex);
-  //   // Optional: include total count for better pagination
-  //   const totalModel = model.length;
-  //   const totalPages = Math.ceil(totalModel/ limit)
-  //   const result = {};
-  //   result.result = newUser;
-  //   result.totalModel = totalModel;
-  //   result.totalPages = totalPages;
-  //   result.limit = limit;
+// TODO: SCANN FOR VIRUS 
+
+const checkFileAnalyses = async (scanId) => {
+  try {
+    const response = await axios.get(`https://www.virustotal.com/api/v3/analyses/${scanId}`, {
+      headers: {
+        'x-apikey': virusTotal,
+      }
+    });
+    // console.log("inside Check file Analysis==============");
+    // console.log(response.data.data.attributes.stats);
+    // console.log("the file is not infected")
+    // console.log("===================end of file Analysis ")
+    return(response.data)
+  } catch (error) {
+    console.error("Error fetching report:", error.response ? error.response.data : error.message);
+  }
+};
+
+const checkFileWithVirusTotal = async () => {
+  const formData = new FormData();
+  const filePath = 'testScann.pdf'; // Ensure this path is correct
+  
+  // Check if the file exists
+  if (!fs.existsSync(filePath)) {
+    throw new Error(`File not found: ${filePath}`);
+  }
+
+  formData.append('file', fs.createReadStream(filePath));
+  // console.log("==================================");
+  // console.log(formData)
+  // console.log("==================================");
+ 
+  try {
+    // Make the API call to VirusTotal
+    const headers = formData.getHeaders();  // output is { content-type: multipart/json --bounary}
+    const response = await axios.post('https://www.virustotal.com/api/v3/files', formData, {
+      headers: {
+        ...headers, // Get headers from formData
+        'x-apikey': virusTotal, // Set API key
+      }
+    });
     
-  //   if (page - 1 > 0) {
-  //       result.previousPage = page - 1
-  //   }
-  //   if (page < totalPages) {
-  //     result.nextPage = page + 1
-  //   }
-  //   res.paginateResults = result
-  //   next()
-  //   }
-  // }
-  // app.get("/", paginateResults(post), (req, res) => {
-  //   res.json(res.paginateResults)
-  // })
+    // Check if the response is successful and return the data
+    if (response.status === 200) {
+      // TODO: analyze the file
+      const scanResult = await checkFileAnalyses(response.data.data.id);
+     
+      // console.log(scanResult);
+      return(scanResult.data.attributes.stats)
+      // console.log (scanResult.data.data.attributes.stats.malicious)
+      // return response.data; // Use 'response.data' directly
+    } else {
+      throw new Error('Failed to scan file');
+    }
+  } catch (error) {
+    throw new Error(`Error scanning file with VirusTotal: ${error.message}`);
+  }
+};
+
+// Execute the function and log the result
+// TODO: Function call to test   checkFileWithVirusTotal   function
+// checkFileWithVirusTotal()
+//   .then(data => console.log('Scan Result:', data))
+//   .catch(error => console.error('Error:', error.message));
+
+// TODO virsu check middleware
+
+const virusCheckMiddleware = async (req, res, next) => {
+  // console.log(JSON.stringify(req.files))
+  if (req.files && req.files.length > 10) {
+
+    try {
+      console.log(req.files)
+      const response = await checkFileWithVirusTotal(req.files[0]);
+      console.log("Malicious score:", response.malicious); // Log the score for debugging
+
+      // Check for a non-malicious file (adjusted to simulate your test case)
+      if (response && response.malicious == 0) {
+        console.log("File is safe to upload");
+        return next(); // Only call next if the file is safe
+      } else {
+        // If the file is malicious or an error is flagged, respond with an error
+        console.log("File is malicious or an error occurred");
+        return res.status(400).json({ error: response.error || "File is malicious" });
+      }
+    } catch (error) {
+      console.error("Error scanning file:", error);
+      return res.status(500).json({ error: "Error occurred while scanning for viruses." });
+    }
+  } else {
+    // No files uploaded; return an error
+    return res.status(400).json({ error: 'No files uploaded' });
+  }
+};
+
+
+// Main upload route   upload.array('files', 4),
+app.post('/api/upload', upload.array('files', 4), virusCheckMiddleware, async (req, res) => {
+  console.log("inside upload route");
+  console.log(req.files)
+ 
+  try {
+    // Assuming the file is safe after the middleware check
+    res.json({ message: 'File uploaded and scanned successfully', result: req.files });
+  } catch (error) {
+    console.log({
+      'Message': "Error occurred while processing the upload",
+      error: error.message
+    });
+    res.status(500).json({ message: 'Error occurred during file upload' });
+  }
+});
+
+
+        
+
+
+
+

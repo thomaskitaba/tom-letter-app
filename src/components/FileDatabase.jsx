@@ -40,7 +40,7 @@ const FileDatabase = () => {
     );
 
     return (
-        <div className="bg-green-400 pl-4">
+        <div className="bg-lime-300 pl-4">
             <h1>File Database</h1>
             {/* Search input to filter files */}
             <input
