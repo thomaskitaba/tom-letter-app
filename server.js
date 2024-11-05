@@ -293,9 +293,8 @@ function paginateResults(model, modelSelect, modelQuery) {
 
   // TODO: FILE VIEWER
   
-
 app.get('/', (req, res)=> {
-  res.status(200).json({message: "Welcome to the file viewer"});
+  res.status(200).json({message: "Welcome to the tom-letter-app!"});
   console.log("Welcome to the file viewer");
 })
 // Route to get the list of PDF files

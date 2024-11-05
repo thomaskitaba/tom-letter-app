@@ -3,7 +3,7 @@ import '@testing-library/jest-dom';  // Import for extended matchers
 import Upload from '../src/components/Upload'; // Adjust path as needed
 import MyContext from '../src/components/MyContext'; // Adjust path as needed
 import axios from 'axios';
-import { vi } from 'vitest';  // Import vi for mocking
+import { vi} from 'vitest';  // Import vi for mocking
 
 // Mock axios to prevent real API calls
 vi.mock('axios');  // Use vi.mock to mock axios
@@ -81,4 +81,5 @@ describe('Upload Component', () => {
 });
 
   
+
 

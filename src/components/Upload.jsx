@@ -19,7 +19,6 @@ function Upload() {
     setFiles(event.target.files);
   };
 
-  
 
   const handleUpload = async (event) => {
     event.preventDefault();
