@@ -289,9 +289,15 @@ function paginateResults(model, modelSelect, modelQuery) {
     res.status(500).json({ message: 'Unable to confirm' });
   }
   })
-  
+  // TODO: ENDPONTS / ROUTS============================================
+
   // TODO: FILE VIEWER
   
+
+app.get('/', (req, res)=> {
+  res.status(200).json({message: "Welcome to the file viewer"});
+  console.log("Welcome to the file viewer");
+})
 // Route to get the list of PDF files
 app.get('/pdfs', (req, res) => {
   fs.readdir(pdfFolderPath, (err, files) => {
