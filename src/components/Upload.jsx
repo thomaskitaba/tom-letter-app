@@ -41,7 +41,7 @@ function Upload() {
     }
 
     try {
-      const response = await axios.post('http://localhost:5000/api/upload', formData, {
+      const response = await axios.post(`${endpoint}/api/upload`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
@@ -56,7 +56,7 @@ function Upload() {
 
       console.log(response.data);
       setMessage({'unsafeFiles': response.data.locals.unsafeFiles, 'safeFiles': response.data.locals.safeFiles});
-      await delay(5000);
+      await delay(2000);
       setShowUploadProgress(false);
       setShowProgress(false);
      
