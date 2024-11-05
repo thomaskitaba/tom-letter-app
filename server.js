@@ -13,7 +13,7 @@ import axios from "axios";
 import fs from "fs";
 import multer from 'multer';
 import FormData from 'form-data';
-import { delay } from "./src/components/Utility";
+// import { delay } from './src/components/Utility';
 
 const router = express.Router();
 const app = express();
@@ -22,9 +22,7 @@ app.use(express.json());
 app.use("/", router);
 app.listen(5000, () => console.log("tom-letter-app Server is Running"));
 
-
 dotenv.config();
-
 
 // Apply authentication middleware to all routes that need protection
 // TODO:sqlite3 database configuration
@@ -36,7 +34,6 @@ const myDatabase = path.join(__dirname, 'files.db');
 const db = new sqlite3.Database(myDatabase, sqlite3.OPEN_READWRITE, (err) => {
   if (err) return console.error(err);
 });
-
 
 // Other ES module imports
 // require('dotenv').config();
@@ -58,13 +55,13 @@ const storage = multer.diskStorage({
     cb(null, path.join(__dirname, 'files'));
   },
   filename: (req, file, cb) => {
-    cb(null, file.originalname);
+    cb(null, file[i].originalname);
   }
 });
 // File filter to allow only specific file types
 const fileFilter = (req, file, cb) => {
   const fileTypes = /jpeg|jpg|png|pdf/; // Allowed file extensions
-  const extname = fileTypes.test(path.extname(file.originalname).toLowerCase()); // Check extension
+  const extname = fileTypes.test(path.extname(file[i].originalname).toLowerCase()); // Check extension
   const mimetype = fileTypes.test(file.mimetype); // Check MIME type
   
   if (extname && mimetype) {
@@ -74,7 +71,7 @@ const fileFilter = (req, file, cb) => {
   }
 };
 // Initialize multer with storage and file filter
-const upload = multer({ storage, fileFilter });
+let upload = multer({ storage, fileFilter });
 
 // TODO: API Middleware
 const authenticate = (req, res, next) => {
@@ -90,6 +87,9 @@ const authenticate = (req, res, next) => {
 // Apply middleware to specific routes, for example, '/api'
 app.use('/api', authenticate);
 // todo: end of middleware
+// TODO: Utility Functions
+const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
 
 // TODO: SEND EMIAL USING nodemailer 
 const contactEmail = nodemailer.createTransport({
@@ -305,6 +305,7 @@ app.get('/pdfs', (req, res) => {
 // TODO: SCANN FOR VIRUS 
 
 const checkFileAnalyses = async (scanId) => {
+  console.log("inside Check file Analysis==============");
   try {
     const response = await axios.get(`https://www.virustotal.com/api/v3/analyses/${scanId}`, {
       headers: {
@@ -321,9 +322,15 @@ const checkFileAnalyses = async (scanId) => {
   }
 };
 
-const checkFileWithVirusTotal = async () => {
+const checkFileWithVirusTotal = async (file) => {
+  console.log("inside checkFileWithVirusTotal--------------");
+  if (!file && !file.buffer) {
+    throw new Error('File not provided');
+  }
+  // Create a new FormData object
   const formData = new FormData();
-
+  // Append the file to the form data
+  formData.append('file', file.buffer, file.originalname);
   // todo: test using testScann.pad
   // const filePath = 'testScann.pdf'; // Ensure this path is correct
   // // Check if the file exists
@@ -367,8 +374,8 @@ const checkFileWithVirusTotal = async () => {
 //   .catch(error => console.error('Error:', error.message));
 
 // TODO virsu check middleware
-Storage = multer.memoryStorage();
-upload = multer({ storage});
+// const tempStorage = multer.memoryStorage();
+// upload = multer({ storage});
 
 // todo: original code
 // const virusCheckMiddleware = async (req, res, next) => {
@@ -415,89 +422,78 @@ upload = multer({ storage});
 
 
 const virusCheckMiddleware = async (req, res, next) => {
-
-  safeFiles = [];
-  unsafeFiles = [];
-
-  // if (req.files.length < 5){ 
+  console.log("----inside virusCheckMiddleware----");
+  const safeFiles = [];
+  const unsafeFiles = [];
+ 
     // the file to be scaned by virusTotal
     const file = req.files;
     const uploadPerMinute = 4;
 
-for (let j = 0; j < file.length; i = i + 4) {
+for (let j = 0; j < Math.ceil(file.length / uploadPerMinute); j++) {
       // TODO: check if i + 4  is greater than file.length
-      // if 
-      if (((j * uploadPerMinute) + uploadPerMinute) > file.length ){
-        uploadPerMinute = file.length - (j * uploadPerMinute)
-      }
-      for(let i = j * uploadPerMinute; i < i + uploadPerMinute ; i++) {
+      const startIndex = j * uploadPerMinute;
+      const endIndex =  Math.min(startIndex + uploadPerMinute, file.length)
+
+      for(let i = startIndex; i < endIndex ; i++) {
+        console.log(`trying to scann file-${[i]}: ${file[i].originalname}`)
         try{
           const response = await checkFileWithVirusTotal(file[i])
-          // delay(10);
+          await delay(10);
           if (response && response.malicious === 0) {
             safeFiles.push(file[i]);
           }else {
             unsafeFiles.push(file[i]);
           }
-          // if (response.statusCode !== 200) {
-          //   throw new error({"message": "Error while scanning files"})
-          // }
+          console.log(`File-${[i]}: ${file[i].originalname} is safe to upload`);
         }catch(error) {
-          console.log(`Error occured while scanning ${file.originalname}`);
-          // res.status(500).json({"message": "Error while scanning files"})
+          console.log(`Error occured while scanning ${file[i].originalname}: ${error.message}`);
         }
-        
       }
-      delay(1010);
+      console.log("waiting for 1 minute before scanning the next batch of files");
+      await delay(1010);
     }
-    if (safeFiles.length == 0) {
+    if (safeFiles.length > 0) {
       req.files = safeFiles;
+      res.locals.safeFiles = safeFiles;
+      res.locals.unsafeFiles = unsafeFiles;
       return next();
     }
     else{
       res.status(400).json({"Message": 'all files are unsafe'})
     }
-    if (unsafeFiles != 0) {
-      res.locals.unsafeFiles = unsafeFiles;
-    }
-  // }
 }
 
-storage = multer.memoryStorage()
-upload = multer({storage})
 
-app.post('/api/upload', upload.array('files', 4)), virusCheckMiddleware, async(req, res) => {
+const tempStorage = multer.memoryStorage()
+upload = multer({storage: tempStorage})
+
+app.post('/api/upload', upload.array('files', 4), virusCheckMiddleware, async(req, res) => {
     const savedFiles = [];
     const unsavedFiles = [];
-    
+    console.log("inside upload route");
     if (req.files && req.files.length > 0) {
-      for (let i = 0; req.files.length; i++) {
+      for (let i = 0; i < req.files.length; i++) {
         // the file about to be saved from memory to diskstorage
         const file = req.files[i]
-        const savePath = path(__dirname, 'files', file.originalname);
+        const savePath = path.join(__dirname, 'files', file.originalname);
         try {
           // we can use   fs.writeFileSync(savePath, file.buffer)
-          fs.writeFile(savePath, file.buffer, (err) => {
-            if (err) {
-              // console.log(`error occured while saving ${req.files[i].originalname}`);
-              unsavedFiles.push(file.originalname);
-            } else {
-              savedFiles.push(file.originalname);
-            }
-          });
+          await fs.promises.writeFile(savePath, file.buffer);
+          savedFiles.push(file.originalname);
+          console.log(`file-${[i]}: ${file.originalname} saved to diskStorage`);
         }catch(error) {
-          console.log('error encountered while saving file');
+          unsavedFiles.push(file.originalname);
+          console.log('error encountered while saving file to diskStorage');
         }
       } 
-      res.status(200).json({"unsavedFiles": unsavedFiles, "savedFiles": savedFiles, "unsafeFiles": res.locals.unsafeFiles})
+      res.status(200).json({"unsavedFiles": unsavedFiles, "savedFiles": savedFiles, "safeFiles": res.locals.safeFiles, "unsafeFiles": res.locals.unsafeFiles})
     }
     else {
         console.log('every file is unsafe');
+        res.status(400).json({"message": "Files not provided"})
     }
-}
-
-
-
+})
 
 
 
