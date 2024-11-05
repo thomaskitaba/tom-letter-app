@@ -55,8 +55,8 @@ function Upload() {
       });
 
       console.log(response.data);
-      setMessage('Upload successful!');
-      await delay(3000);
+      setMessage({'unsafeFiles': response.data.locals.unsafeFiles, 'safeFiles': response.data.locals.safeFiles});
+      await delay(5000);
       setShowUploadProgress(false);
       setShowProgress(false);
      
