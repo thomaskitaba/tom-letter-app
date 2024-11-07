@@ -12,7 +12,7 @@ function Upload() {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [message, setMessage] = useState('');
   const [showUploadButton, setShowUploadButton] = useState(true);
-  const { apiKey, endpoint } = useContext(MyContext);
+  const { apiKey, endpoint, DBUpdated, setDBUpdated} = useContext(MyContext);
   const inputFileRef = useRef(null);
   
   const handleFileChange = (event) => {
@@ -33,8 +33,8 @@ function Upload() {
     setShowUploadProgress(true);
     setShowProgress(false);
     setUploadProgress(0);
-    setMessage('Scanning for virus then Uploading In Progress');
-
+    setMessage('Sending files to virsus Total for Scanning.');
+    
     const formData = new FormData();
     for (let i = 0; i < files.length; i++) {
       formData.append('files', files[i]);
@@ -56,10 +56,16 @@ function Upload() {
 
       console.log(response.data);
       setMessage({'unsafeFiles': response.data.locals.unsafeFiles, 'safeFiles': response.data.locals.safeFiles});
-      await delay(2000);
+      
+      // await delay(2000);
       setShowUploadProgress(false);
       setShowProgress(false);
-     
+      setDBUpdated(true);
+      if (uploadProgress == 100) {
+        setUploadProgress(0);
+        setMessage('Wait while it uploads, it may take several minutes based on file sizes')
+      }
+      
     
     } catch (error) {
       console.error('Error uploading files', error);

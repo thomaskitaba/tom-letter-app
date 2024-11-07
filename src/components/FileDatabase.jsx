@@ -11,7 +11,7 @@ const FileDatabase = () => {
     const [page, setPage] = useState(3);
     const [totalPages, setTotalPages] = useState(1);
     const [searchTerm, setSearchTerm] = useState(""); // New state for search term
-    const { endpoint, apiKey } = useContext(MyContext);  // Assume endpoint and apiKey come from MyContext
+    const { endpoint, apiKey, DBUpdated, setDBUpdated } = useContext(MyContext);  // Assume endpoint and apiKey come from MyContext
 
     useEffect(() => {
         const fetchFiles = async () => {
@@ -31,7 +31,7 @@ const FileDatabase = () => {
         };
 
         fetchFiles();
-    }, [page, limit, apiKey]);
+    }, [page, limit, apiKey, DBUpdated]);
 
     // Filter files based on the search term
     const filteredFiles = files.filter(file =>

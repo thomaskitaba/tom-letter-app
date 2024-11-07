@@ -13,6 +13,8 @@ import axios from "axios";
 import fs from "fs";
 import multer from 'multer';
 import FormData from 'form-data';
+
+// import {calculateFileSize} from './src/components/Utility';
 // import { delay } from './src/components/Utility';
 
 const router = express.Router();
@@ -38,6 +40,7 @@ const db = new sqlite3.Database(myDatabase, sqlite3.OPEN_READWRITE, (err) => {
 
 // Other ES module imports
 // require('dotenv').config();
+
 const password = process.env.VITE_PASSWORD;
 const email = process.env.VITE_EMAIL;
 const virusTotal=process.env.VITE_VIRUSTOTALKEY;
@@ -88,9 +91,21 @@ const authenticate = (req, res, next) => {
 // Apply middleware to specific routes, for example, '/api'
 app.use('/api', authenticate);
 // todo: end of middleware
+
 // TODO: Utility Functions
+
+// todo:--- 1. delay function
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
+// todo:--- 2. calculateFileSize function
+
+const calculateFileSize = (fileSize) => {
+    if (fileSize >= 1024 && fileSize < (1024 * 1024)) {
+      fileSize = `${fileSize / 1024} KB`;
+    }else if (fileSize >= (1024 * 1024) && fileSize < (1024 * 1024 * 1024)) {
+      fileSize = `${Math.ceil(fileSize / (1024 * 1024))} MB`;
+    }
+  }
 
 // TODO: SEND EMIAL USING nodemailer 
 const contactEmail = nodemailer.createTransport({
@@ -431,16 +446,17 @@ const virusCheckMiddleware = async (req, res, next) => {
   console.log("----inside virusCheckMiddleware----");
   const safeFiles = [];
   const unsafeFiles = [];
- 
+  
     // the file to be scaned by virusTotal
     const file = req.files;
+    console.log("file to be scanned: ", file);
     const uploadPerMinute = 4;
 
 for (let j = 0; j < Math.ceil(file.length / uploadPerMinute); j++) {
       // TODO: check if i + 4  is greater than file.length
       const startIndex = j * uploadPerMinute;
       const endIndex =  Math.min(startIndex + uploadPerMinute, file.length)
-
+      
       for(let i = startIndex; i < endIndex ; i++) {
         console.log(`trying to scann file-${[i]}: ${file[i].originalname}`)
         try{
@@ -470,6 +486,116 @@ for (let j = 0; j < Math.ceil(file.length / uploadPerMinute); j++) {
     }
 }
 
+// [
+//   {
+//     "fieldname": "files",          // The field name used in the form
+//     "originalname": "example.pdf", // The original name of the file
+//     "encoding": "7bit",            // The encoding of the file
+//     "mimetype": "application/pdf", // The MIME type of the file
+//     "buffer": <Buffer>             // The file content as a buffer (this will be the file data)
+//   },
+//   {
+//     "fieldname": "files",
+//     "originalname": "image.png",
+//     "encoding": "7bit",
+//     "mimetype": "image/png",
+//     "buffer": <Buffer>
+//   }
+// ]
+
+
+const uploadFilesToDB = async(files) => {
+  return new Promise ((resolve, reject) => {
+    // TODO:   convert files to rows
+  console.log("=====Inside UploaFileToDB=====");
+  console.log(files);
+  const file = files[0];
+  let rows = [];
+  
+  let fileSize = '';
+  let i = 0;
+  let j = 0;
+  let dateWritten = '';
+  const todaysDate = new Date().toISOString().split('T')[0]
+  fileSize = calculateFileSize(file.size);
+  // fileLocalLocation = file.originalname;
+  let title = 'No Title'
+  console.log("file buffer@@@@@@@@@@@@@@@@@@@: ", file.size);
+  console.log("fileSize: @@@@@@@@@@@@", fileSize);
+  //convert file.size to KB or MB
+  
+  // console.log(form);
+  console.log(`formData fields:------`);
+  
+  if (files && files.length > 0) {
+  files.forEach(file => {
+    //  i = file.originalname.indexOf('@');
+    //  j = file.originalname.length;
+    
+    // if (i >= 0){
+    //   title = title.slice(0, i);
+    // }else {
+    //   title = file.originalname;
+    // }
+
+    const regexTitle = /^(.*?)(\d{4}[-/]\d{2}[-/]\d{2}|\d{2}[-/]\d{2}[-/]\d{4})/;
+ const regex = /\d{4}[-/]\d{2}[-/]\d{2}|\d{2}[-/]\d{2}[-/]\d{4}/;
+
+
+// Match the file name against the regex
+const matchTitle = file.originalname.match(regexTitle);
+const matchDate = file.originalname.match(regex);
+
+// Initialize title and dateWritten
+let title = '';
+let dateWritten = '';
+
+// Extract title and date if matches are found
+if (matchTitle && matchTitle[1]) {
+  title = matchTitle[0];  // Title part before the date
+} else {
+  title = file.originalname;  // Default to the whole file name if no title is found
+}
+
+if (matchDate && matchDate[0]) {
+  dateWritten = matchDate[0];  // The date part
+} else {
+  dateWritten = '0000-00-00';  // Default date if no date is found
+}
+
+    // add title and date property and set its value to title
+    let row = [
+    title,
+    file.originalname,
+    file.originalname,
+    dateWritten,
+    todaysDate,
+    todaysDate,
+    `${1}`,
+    fileSize
+    ]
+    rows.push(row);
+  })
+  }
+  try {
+    rows.forEach(row => {
+      const sql = 'INSERT INTO file (FileName, Title, FileLocalLocation, DateWritten, DataCreationDate, DataLastEditedDate, RecipientCompanyId, FileSize) VALUES (?, ?, ?, ?, ?, ?, ?, ?)';
+
+      db.run (sql, row, (err) => {
+        if (err) {
+          console.log("error updateing row");
+          reject(err);
+        }
+        console.log("succesfully updated database");
+      })
+    })
+    resolve(rows);
+  } catch(error) {
+    reject(error);
+  }
+  })
+}
+
 const tempStorage = multer.memoryStorage()
 upload = multer({storage: tempStorage})
 
@@ -485,24 +611,22 @@ app.post('/api/upload', upload.array('files', 40), virusCheckMiddleware, async(r
         try {
           // we can use   fs.writeFileSync(savePath, file.buffer)
           await fs.promises.writeFile(savePath, file.buffer);
-          savedFiles.push(file.originalname);
-          console.log(`file-${[i]}: ${file.originalname} saved to diskStorage`);
+          savedFiles.push(file);
+          console.log(`file-${[i]}: ${JSON.stringify(file.originalname)} saved to diskStorage`);
         }catch(error) {
-          unsavedFiles.push(file.originalname);
+          unsavedFiles.push(file);
           console.log('error encountered while saving file to diskStorage');
         }
       } 
-      res.status(200).json({"unsavedFiles": unsavedFiles, "savedFiles": savedFiles, "safeFiles": res.locals.safeFiles, "unsafeFiles": res.locals.unsafeFiles})
+      res.status(200).json({"unsavedFiles": unsavedFiles, "savedFiles": savedFiles, "safeFiles": res.locals.safeFiles.originalname, "unsafeFiles": res.locals.unsafeFiles})
+      try {
+        const response = await uploadFilesToDB(savedFiles);
+      } catch(error) {
+        console.log("error Updating DB with uploaded files")
+      }
     }
     else {
         console.log('every file is unsafe');
         res.status(400).json({"message": "Files not provided"})
     }
 })
-
-
-
-
-
-
-
