@@ -362,10 +362,7 @@ const checkFileAnalyses = async (scanId) => {
         'x-apikey': virusTotal,
       }
     });
-    // console.log("inside Check file Analysis==============");
-    // console.log(response.data.data.attributes.stats);
-    // console.log("the file is not infected")
-    // console.log("===================end of file Analysis ")
+   
     return(response.data)
   } catch (error) {
     console.error("Error fetching report:", error.response ? error.response.data : error.message);
@@ -417,6 +414,17 @@ const checkFileWithVirusTotal = async (file) => {
   }
 };
 
+const InsertToDB = async (Files) => {
+  const rows = uu
+   console.log(Files);
+}
+
+app.post('api/saveUploadsToDB', (req, res) => {
+  // TODO: function to parse the filename into data and title and create Insert sql statments
+  const insertFiles = db.prepare('INSERT INTO File (FileName, FileSize, FileType, FileDate) VALUES (?, ?, ?, ?)');
+  
+})
+
 // Execute the function and log the result
 // TODO: Function call to test   checkFileWithVirusTotal   function
 // checkFileWithVirusTotal()
@@ -435,7 +443,7 @@ const virusCheckMiddleware = async (req, res, next) => {
     const file = req.files;
     const uploadPerMinute = 4;
 
-for (let j = 0; j < Math.ceil(file.length / uploadPerMinute); j++) {
+    for (let j = 0; j < Math.ceil(file.length / uploadPerMinute); j++) {
       // TODO: check if i + 4  is greater than file.length
       const startIndex = j * uploadPerMinute;
       const endIndex =  Math.min(startIndex + uploadPerMinute, file.length)
@@ -444,7 +452,7 @@ for (let j = 0; j < Math.ceil(file.length / uploadPerMinute); j++) {
         console.log(`trying to scann file-${[i]}: ${file[i].originalname}`)
         try{
           const response = await checkFileWithVirusTotal(file[i])
-          await delay(10);
+          
           if (response && response.malicious === 0) {
             safeFiles.push(file[i]);
           }else {
@@ -475,22 +483,37 @@ upload = multer({storage: tempStorage})
 app.post('/api/upload', upload.array('files', 40), virusCheckMiddleware, async(req, res) => {
     const savedFiles = [];
     const unsavedFiles = [];
+    const savedToDBFiles = [];
+
     console.log("inside upload route");
     if (req.files && req.files.length > 0) {
       for (let i = 0; i < req.files.length; i++) {
         // the file about to be saved from memory to diskstorage
         const file = req.files[i]
-        const savePath = path.join(__dirname, 'files', file.originalname);
+        const savePath = path.join(__dirname, 'files', file);
         try {
           // we can use   fs.writeFileSync(savePath, file.buffer)
           await fs.promises.writeFile(savePath, file.buffer);
-          savedFiles.push(file.originalname);
+          savedFiles.push(file);
           console.log(`file-${[i]}: ${file.originalname} saved to diskStorage`);
+         
         }catch(error) {
           unsavedFiles.push(file.originalname);
           console.log('error encountered while saving file to diskStorage');
         }
-      } 
+      }
+      // TODO: save the file to the database
+      try {
+      const response = await axios.post(`${endpoint}/api/saveUploadsToDB`, [savedFiles], { 
+        headers: {
+          'Content-type': 'application/json',
+          'x-api-key': apiKey,
+        }
+      }) 
+      res.status(200).json({"savedToDBFiles": savedToDBFiles, "unsavedFiles": unsavedFiles, "savedFiles": savedFiles, "safeFiles": res.locals.safeFiles, "unsafeFiles": res.locals.unsafeFiles})
+    } catch(error) {
+      console.log('Error while saving file to database');
+    }
       res.status(200).json({"unsavedFiles": unsavedFiles, "savedFiles": savedFiles, "safeFiles": res.locals.safeFiles, "unsafeFiles": res.locals.unsafeFiles})
     }
     else {
