@@ -537,7 +537,7 @@ const uploadFilesToDB = async(files) => {
     // }else {
     //   title = file.originalname;
     // }
-
+    // const regexTitle = /^(.*?)\d{2}[-/]\d{2}[-/]\d{4}/
     const regexTitle = /^(.*?)(\d{4}[-/]\d{2}[-/]\d{2}|\d{2}[-/]\d{2}[-/]\d{4})/;
  const regex = /\d{4}[-/]\d{2}[-/]\d{2}|\d{2}[-/]\d{2}[-/]\d{4}/;
 
@@ -552,7 +552,7 @@ let dateWritten = '';
 
 // Extract title and date if matches are found
 if (matchTitle && matchTitle[1]) {
-  title = matchTitle[0];  // Title part before the date
+  title = matchTitle[1];  // Title part before the date
 } else {
   title = file.originalname;  // Default to the whole file name if no title is found
 }
@@ -565,8 +565,8 @@ if (matchDate && matchDate[0]) {
 
     // add title and date property and set its value to title
     let row = [
-    title,
     file.originalname,
+    title,
     file.originalname,
     dateWritten,
     todaysDate,
@@ -602,7 +602,10 @@ upload = multer({storage: tempStorage})
 app.post('/api/upload', upload.array('files', 40), virusCheckMiddleware, async(req, res) => {
     const savedFiles = [];
     const unsavedFiles = [];
+   
     console.log("inside upload route");
+    const files = req.files
+    console.log(files)
     if (req.files && req.files.length > 0) {
       for (let i = 0; i < req.files.length; i++) {
         // the file about to be saved from memory to diskstorage
@@ -630,3 +633,29 @@ app.post('/api/upload', upload.array('files', 40), virusCheckMiddleware, async(r
         res.status(400).json({"message": "Files not provided"})
     }
 })
+
+
+app.post('/api/download', (req, res) => {
+  // Extract the filename from the request body
+  const {fileToDownload} = req.body;
+  const filepath = path.join(__dirname, 'files', fileToDownload);
+  // Log the filename for debugging purposes
+  console.log("my data: ", `${mydata}`);
+  console.log("data2", `${data2}`);
+  if (fs.existsSync(filePath)) {
+    // Send the file as a download
+    res.download(filePath, filename, (err) => {
+      if (err) {
+        console.error("Error sending file:", err);
+        res.status(500).json({ message: "Error sending file" });
+      }
+    });
+  } else {
+    // If file doesn't exist, send a 404 response
+    res.status(404).json({ message: "File not found" });
+  }
+  
+})
+
+
+

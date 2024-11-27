@@ -24,7 +24,7 @@ function App() {
         {/* <FileDB /> */}
         <FileDatabase />
         {/* <PdfViewer /> */}
-        <TestTailwind />
+        {/* <TestTailwind /> */}
       </MyContextProvider>
     </>
   )

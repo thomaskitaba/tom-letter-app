@@ -13,3 +13,31 @@ body {
   color: red;
   border: 2px blue solid;
 }
+
+.circle-progress {
+  transform-origin: center;
+  animation: rotation 2s infinite linear;
+  
+}
+@keyframes rotation {
+  10% {
+    transform: rotate(0deg);
+    border-color: rgb(97, 149, 245);
+  }
+  50% {
+    transform: rotate(180deg);
+    border-color: rgb(9, 193, 239);
+  }
+  100% {
+    transform: rotate(360deg);
+    border-color: rgb(116, 93, 248);
+  }
+}
+/* from {
+  transform: rotate(0deg);
+  border-color: rgb(204, 0, 255);
+}
+to {
+  transform: rotate(360deg);
+  border-color: rgb(0, 234, 255);
+} */

@@ -9,6 +9,7 @@ function Upload() {
   const [files, setFiles] = useState([]);
   const [showUploadProgress, setShowUploadProgress] = useState(false);
   const [showProgress, setShowProgress] = useState(false);
+  const [showCircleProgress, setShowCircleProgress] = useState(true);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [message, setMessage] = useState('');
   const [showUploadButton, setShowUploadButton] = useState(true);
@@ -18,7 +19,7 @@ function Upload() {
   const handleFileChange = (event) => {
     setFiles(event.target.files);
   };
-
+  
   
 
   const handleUpload = async (event) => {
@@ -33,7 +34,7 @@ function Upload() {
     setShowUploadProgress(true);
     setShowProgress(false);
     setUploadProgress(0);
-    setMessage('Sending files to virsus Total for Scanning.');
+    setMessage('Scanning for virus -> Uploading Files -> Updating DataBase.');
     
     const formData = new FormData();
     for (let i = 0; i < files.length; i++) {
@@ -51,6 +52,10 @@ function Upload() {
           setUploadProgress(percentCompleted);
           setShowProgress(true);
           setShowUploadButton(false);
+          // if (uploadProgress == 100) {
+          //   setUploadProgress(0);
+          //   setMessage('Wait while it uploads, it may take several minutes based on file sizes')
+          // }
         }
       });
 
@@ -61,10 +66,7 @@ function Upload() {
       setShowUploadProgress(false);
       setShowProgress(false);
       setDBUpdated(true);
-      if (uploadProgress == 100) {
-        setUploadProgress(0);
-        setMessage('Wait while it uploads, it may take several minutes based on file sizes')
-      }
+      
       
     
     } catch (error) {
@@ -86,7 +88,7 @@ function Upload() {
   return (
     <>
       {showUploadProgress && 
-        <div className="bg-gray-200 border-2 border-gray-500 w-[350px] h-[150px] absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 flex flex-col justify-center items-center"
+        <div className="bg-gray-200 border-2 border-gray-500 w-[350px] h-[200px] absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 flex flex-col justify-center items-center"
 >
           <X onClick={() => setShowUploadProgress(false)} style={{
             fontSize: '40px',
@@ -95,17 +97,32 @@ function Upload() {
             right: '20px'
           }} />
          
-          <div style={{ margin: '10px' }}>{message}</div>
+          <div style={{ margin: '0px' }}>{message}</div>
+          
           {showProgress &&
-            <div
-              role="progressbar"
-              className="bg-blue-700  h-[20px] absolute left-[10px] top-[85px]"
-              style={{width: `${uploadProgress - 6}%`}}
-            />
+            // <div
+            //   role="progressbar"
+            //   className="bg-blue-700  h-[20px] absolute left-[10px] top-[85px]"
+            //   style={{width: `${100}%`}}
+            // >
+            // </div>
+            <div className="w-[50px] h-[50px] relative top-[0%] rounded-full border-dashed border-[8px] circle-progress">
+              
+            </div>
+            
           }
+          {/* {showCircleProgress &&
+          <div className="w-[50px] h-[50px] relative top-[-13%] rounded-full border-dashed border-4 circle-progress">
+          </div>
+          } */}
+          {/* <div className="absolute bg-green-400 w-[100%] top-[100px] flex justify-center items-center">
+            <div className="w-[40px] h-[40px] relative top-[70%] rounde-full border-dashed border-4 circle-progress">
+            </div>
+
+          </div> */}
         </div>
-      }
-      <div className="flex-row gap-4 p-4 bg-yellow-400">
+      } 
+      <div className="flex-row gap-4 p-4 bg-yellow-200">
       <h1>Upload</h1>
       <form onSubmit={handleUpload}>
         <label htmlFor="file-upload" style={{ display: 'none' }}>Upload</label>
@@ -120,7 +137,7 @@ function Upload() {
           onClick={() => setShowUploadProgress(false)}
         />
         <div data-testid="file-length" style={{display: 'none'}} >{files.length}</div>
-        {showUploadButton && <button type="submit" className="bg-blue-400 rounded px-4 py-2  hover:bg-blue-600">Upload Files</button>}
+        {showUploadButton && <button type="submit" className="bg-blue-400 rounded px-4 py-2  hover:bg-blue-600 hover:text-white">Upload Files</button>}
       </form>
       </div>
     </>
