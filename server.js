@@ -447,6 +447,7 @@ const virusCheckMiddleware = async (req, res, next) => {
   const safeFiles = [];
   const unsafeFiles = [];
   
+  
     // the file to be scaned by virusTotal
     const file = req.files;
     console.log("file to be scanned: ", file);
@@ -485,7 +486,6 @@ for (let j = 0; j < Math.ceil(file.length / uploadPerMinute); j++) {
       res.status(400).json({"Message": 'all files are unsafe'})
     }
 }
-
 // [
 //   {
 //     "fieldname": "files",          // The field name used in the form
@@ -502,8 +502,6 @@ for (let j = 0; j < Math.ceil(file.length / uploadPerMinute); j++) {
 //     "buffer": <Buffer>
 //   }
 // ]
-
-
 const uploadFilesToDB = async(files) => {
   return new Promise ((resolve, reject) => {
     // TODO:   convert files to rows
@@ -634,28 +632,35 @@ app.post('/api/upload', upload.array('files', 40), virusCheckMiddleware, async(r
     }
 })
 
-
 app.post('/api/download', (req, res) => {
   // Extract the filename from the request body
-  const {fileToDownload} = req.body;
-  const filepath = path.join(__dirname, 'files', fileToDownload);
-  // Log the filename for debugging purposes
-  console.log("my data: ", `${mydata}`);
-  console.log("data2", `${data2}`);
+  const { fileName } = req.body;
+
+  // Validate fileName
+  if (!fileName) {
+    return res.status(400).json({ message: "Error: File name not provided" });
+  }
+
+  // Construct the file path
+  const filePath = path.join(__dirname, 'files', fileName);
+  // Log the filename for debugging
+  console.log(`About to download file: ${fileName}`);
+
+  // Check if the file exists
   if (fs.existsSync(filePath)) {
     // Send the file as a download
-    res.download(filePath, filename, (err) => {
+    res.download(filePath, fileName, (err) => {
       if (err) {
         console.error("Error sending file:", err);
         res.status(500).json({ message: "Error sending file" });
       }
     });
   } else {
-    // If file doesn't exist, send a 404 response
-    res.status(404).json({ message: "File not found" });
+    // File doesn't exist, send a 404 response
+    res.status(404).json({ message: "File not in repository, shake your Database" });
   }
-  
-})
+});
+
 
 
 

@@ -1,5 +1,8 @@
 :root {
   --bg-default: white;
+  --bg-blue-400: #60A5FA;
+  --bg-blue-600: #2563EB;
+
 }
 body {
   background-color: white;
@@ -41,3 +44,20 @@ to {
   transform: rotate(360deg);
   border-color: rgb(0, 234, 255);
 } */
+
+ .pagination-buttons  div{
+  background-color: rgb(99, 99, 239);
+  padding-block: 6px;
+  width: 30px;
+  height: 30px;
+  border-radius: 10px;
+  box-shadow: black 1px 1px 8px 1px;
+  text-align: center;
+
+ }
+ .pagination-buttons div:hover {
+  background-color: blue;
+  color: white;
+  cursor: pointer;
+
+ }

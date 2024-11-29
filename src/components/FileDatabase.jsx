@@ -8,10 +8,11 @@ const FileDatabase = () => {
 
     const [files, setFiles] = useState([]);
     const [fileToDownload, setFileToDownload] = useState(null);
-    const [limit, setLimit] = useState(10);
-    const [page, setPage] = useState(3);
+    const [limit, setLimit] = useState(5);
+    const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
-
+    const [showDownloadStatus, setShowDownloadStatus] = useState(false);
+    const [downloadMessage, setDownloadMessage] = useState("");
     const [searchTerm, setSearchTerm] = useState(""); // New state for search term
     const { endpoint, apiKey, DBUpdated, setDBUpdated } = useContext(MyContext);  // Assume endpoint and apiKey come from MyContext
 
@@ -31,22 +32,27 @@ const FileDatabase = () => {
                 console.error('Error fetching PDF files:', error);
             }
         };
-
         fetchFiles();
     }, [page, limit, apiKey, DBUpdated]);
 
+    const handleShowDownloadMessage = () => {
+        setShowDownloadStatus(true);
+        setTimeout(() => {
+            setShowDownloadStatus(false);
+        }, 3000);
+    }
     // Filter files based on the search term
+
     const filteredFiles = files.filter(file =>
         file.FileName.toLowerCase().includes(searchTerm.toLowerCase()) ||
         file.Title.toLowerCase().includes(searchTerm.toLowerCase()) // Filtering by both FileName and Title
     );
 
-    const handleDownload = async () => {
+    const handleDownload = async (fileName) => {
         try {
-            setFileToDownload("Thomas Kitaba")
-            const response = await axios.post(
+            const response = await axios.post( 
                 `${endpoint}/api/download`, 
-                { fileToDownload: fileToDownload }, // Send the filename in the request body
+                { fileName}, // Send the filename in the request body
                 {
                   headers: {
                     'Content-Type': 'application/json', // Use JSON as the content type
@@ -55,7 +61,7 @@ const FileDatabase = () => {
                   responseType: 'blob', // Set the response type to 'blob' to receive binary data
                 }
               );
-              console.log("Download Success");
+            console.log("Download Success");
             // Create a URL and trigger a download
             // Create a Blob URL from the response data to represent the file as a URL
             const url = window.URL.createObjectURL(new Blob([response.data]));
@@ -71,14 +77,25 @@ const FileDatabase = () => {
             link.click();
             // Remove the link element from the DOM after the download has been triggered
             link.remove();
-        
+            // setShowDownloadStatus(false);
         } catch (error) {
-          console.error(err);
-          alert("Error downloading file");
-        }
+            if (statusCode === 404) {
+                setDownloadMessage(serverMessage || "File not in repository, shake your Database");
+              } else {
+                // Handle other error statuses
+                setDownloadMessage("Error sendind Download link")
+              }
+              handleShowDownloadMessage();
+          }
       };
     
     return (
+        <>
+        { showDownloadStatus &&
+        <div className="absolute bg-blue-100 rounded-lg w-[200px] h-[100px] p-4 transform top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 item-center">
+            {downloadMessage}
+        </div>
+        } 
         <div className="bg-white ">
             <h1>File Database</h1>
             {/* Search input to filter files */}
@@ -103,10 +120,17 @@ const FileDatabase = () => {
                             onClick={() => window.open(`http://localhost:5000/files/${file.FileLocalLocation}`, '_blank')}
                             />
                             <p>{file.Description}</p>
-                            <button type="submit" className="bg-blue-400 rounded my-2 px-4 py-2  hover:bg-blue-600 hover:text-white self-end" onClick={() => { 
-                            setFileToDownload(file.FileName); 
-                            handleDownload(); // Invoke the function
-                        }}> Download </button>
+                            <div className="flex justify-center gap-2 bg-grey-100 rounded-lg">
+                                <button type="submit" className="bg-blue-500 rounded my-2 px-4 py-2 text-white hover:bg-blue-600 hover:text-yellow-200 self-end" onClick={() => { 
+                                setFileToDownload(file.FileName); 
+                                handleDownload(file.FileName); // Invoke the function    
+                            }}> Download </button>
+
+                            <button type="submit" className="bg-blue-500 rounded my-2 px-4 py-2 text-white hover:bg-blue-600 hover:text-yellow-200 self-end" onClick={() => { 
+                                setFileToDownload(file.FileName); 
+                                handleFileEdit(); // Invoke the function
+                            }}> Edit </button>
+                        </div>
                             {/* <imgs
                                 src="/pdf-thumbnail.png" // You can replace this with actual thumbnail generation
                                 alt={file.FileName}
@@ -130,14 +154,24 @@ const FileDatabase = () => {
                 </button>
                 <button 
                     disabled={page >= totalPages} 
-                    onClick={() => { console.log(page);setPage(page + 1)}}
+                    onClick={() => { setPage(page + 1)}}
+                    
                 >
                     <ArrowRight style={{ fontSize: '1.25rem'}} />
                 </button>
             </div>
-            <div><p>prev:{page - 1} cur:{page} next:{page + 1}</p></div>
+            <div className="flex gap-4 m-4"><p>prev:{page - 1} cur:{page} next:{page + 1}</p></div>
+            <div className="flex gap-4 m-4 pagination-buttons">
+                <div onClick={(e) => {setLimit(2); setPage(1)}}>5</div>
+                <div onClick={(e) => {setLimit(10); setPage(1)}}>10</div>
+                <div onClick={(e) => {setLimit(20); setPage(1)}}>20</div>
+                <div onClick={(e) => {setLimit(30); setPage(1)}} >30</div>
+                <div onClick={(e) => {setLimit(40); setPage(1)}}>40</div>
+            </div>
         </div>
+    </>
     );
+    
 };
 
 export default FileDatabase;
@@ -145,4 +179,3 @@ export default FileDatabase;
 
 
 
-  

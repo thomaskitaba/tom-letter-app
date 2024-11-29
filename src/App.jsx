@@ -12,14 +12,12 @@ import FileDB from './components/FileDB';
 import Upload from './components/Upload';
 import TestTailwind from './components/TestTailwind';
 
-
 function App() {
 
   return (
     <>
       <MyContextProvider >
         <Upload />
-        
         {/* <SearchFile /> */}
         {/* <FileDB /> */}
         <FileDatabase />
