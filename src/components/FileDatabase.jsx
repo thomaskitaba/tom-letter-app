@@ -143,31 +143,42 @@ const FileDatabase = () => {
                     <p>No files found.</p>
                 )}
             </div>
-            <div>
+            <div className="flex gap-2 align-center justify-start">
                 {/* Pagination buttons */}
-               
-                <button 
-                    disabled={page <= 1} 
-                    onClick={() => {console.log(page); setPage(page - 1)}}
-                >
-                    <ArrowLeft style={{ fontSize: '1.25rem'}}/>
-                </button>
-                <button 
+                <div className="my-4">
+                    <button className="pagination-buttons"
+                        disabled={page <= 1} 
+                        onClick={() => {console.log(page); setPage(page - 1)}}
+                    >
+                
+                        <ArrowLeft style={{ fontSize: '1.25rem'}}/>
+                    </button>
+                </div>
+
+                <div className=" my-4 flex justify-center border-2 w-[30px] border-blue-600">
+                    {page}
+                </div>
+                <div className="my-4">
+                <button className="pagination-buttons"
                     disabled={page >= totalPages} 
                     onClick={() => { setPage(page + 1)}}
-                    
                 >
                     <ArrowRight style={{ fontSize: '1.25rem'}} />
                 </button>
+                </div>
+                <div className="flex gap-2 m-4 w-fit ">
+                <div className="pagination-buttons" onClick={(e) => {setLimit(2); setPage(1)}}>5</div>
+                <div className="pagination-buttons" onClick={(e) => {setLimit(10); setPage(1)}}>10</div>
+                <div className="pagination-buttons" onClick={(e) => {setLimit(20); setPage(1)}}>20</div>
+                <div className="pagination-buttons" onClick={(e) => {setLimit(30); setPage(1)}} >30</div>
+                <div className="pagination-buttons" onClick={(e) => {setLimit(40); setPage(1)}}>40</div>
+
             </div>
-            <div className="flex gap-4 m-4"><p>prev:{page - 1} cur:{page} next:{page + 1}</p></div>
-            <div className="flex gap-4 m-4 pagination-buttons">
-                <div onClick={(e) => {setLimit(2); setPage(1)}}>5</div>
-                <div onClick={(e) => {setLimit(10); setPage(1)}}>10</div>
-                <div onClick={(e) => {setLimit(20); setPage(1)}}>20</div>
-                <div onClick={(e) => {setLimit(30); setPage(1)}} >30</div>
-                <div onClick={(e) => {setLimit(40); setPage(1)}}>40</div>
+                
             </div>
+            
+            <div className="flex gap-2 m-4"><p>prev:{page - 1} cur:{page} next:{page + 1}</p></div>
+           
         </div>
     </>
     );

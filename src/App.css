@@ -1,7 +1,7 @@
 :root {
   --bg-default: white;
-  --bg-blue-400: #60A5FA;
-  --bg-blue-600: #2563EB;
+  --bg-blue-400: #2563EB;
+  --bg-blue-600: #0549dc;
 
 }
 body {
@@ -45,19 +45,21 @@ to {
   border-color: rgb(0, 234, 255);
 } */
 
- .pagination-buttons  div{
-  background-color: rgb(99, 99, 239);
+ .pagination-buttons{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: var(--bg-blue-400);
   padding-block: 6px;
   width: 30px;
   height: 30px;
-  border-radius: 10px;
-  box-shadow: black 1px 1px 8px 1px;
+  border-radius: 3px;
+  box-shadow: black 1px 1px 5px 1px;
   text-align: center;
-
- }
- .pagination-buttons div:hover {
-  background-color: blue;
   color: white;
+ }
+ .pagination-buttons:hover {
+  background-color: var(--bg-blue-600);
+  color: yellow;
   cursor: pointer;
-
  }
