@@ -172,17 +172,12 @@ const FileDatabase = () => {
                 <div className="pagination-buttons" onClick={(e) => {setLimit(20); setPage(1)}}>20</div>
                 <div className="pagination-buttons" onClick={(e) => {setLimit(30); setPage(1)}} >30</div>
                 <div className="pagination-buttons" onClick={(e) => {setLimit(40); setPage(1)}}>40</div>
-
             </div>
-                
-            </div>
-            
+            </div>   
             <div className="flex gap-2 m-4"><p>prev:{page - 1} cur:{page} next:{page + 1}</p></div>
-           
         </div>
     </>
     );
-    
 };
 
 export default FileDatabase;
