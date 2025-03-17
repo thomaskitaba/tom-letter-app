@@ -228,6 +228,7 @@ function paginateResults(model, modelSelect, modelQuery) {
       const endIndex = page * limit;
       const additionalInfo = {};
       const totalPages = Math.ceil(totalRows / limit);
+      // console.log(totalPages)
       if (page > 1) {
         additionalInfo.previousPage = page - 1;
       }
@@ -264,7 +265,6 @@ function paginateResults(model, modelSelect, modelQuery) {
 
   // todo: =============== END OF PAGINATION ================
   
-
   app.get("/paginate", async (req, res) => {
 
     const tableName = req.query.tableName;

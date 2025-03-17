@@ -10,6 +10,8 @@ const FileDatabase = () => {
     const [fileToDownload, setFileToDownload] = useState(null);
     const [limit, setLimit] = useState(5);
     const [page, setPage] = useState(1);
+    const [paginationButtons, setPaginationButtons] = useState(page);
+    const [arrayOfPages, setArrayOfPages] = useState([]);
     const [totalPages, setTotalPages] = useState(1);
     const [showDownloadStatus, setShowDownloadStatus] = useState(false);
     const [downloadMessage, setDownloadMessage] = useState("");
@@ -32,8 +34,21 @@ const FileDatabase = () => {
                 console.error('Error fetching PDF files:', error);
             }
         };
+        
+        // if (page > 20) {
+        //     setPaginationButtons(10);
+        //     setArrayOfPages([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+        // }else {
+        //     setPaginationButtons(Math.min(5, totalPages));
+        //     const temp = []
+        //     for (let i = 1; i <= Math.min(5, totalPages); i++) {
+        //         temp.push(i);
+        //     }
+        //     setArrayOfPages(temp);
+        // }
+        
         fetchFiles();
-    }, [page, limit, apiKey, DBUpdated]);
+    }, [page, limit, apiKey, arrayOfPages, DBUpdated]);
 
     const handleShowDownloadMessage = () => {
         setShowDownloadStatus(true);
@@ -154,10 +169,17 @@ const FileDatabase = () => {
                         <ArrowLeft style={{ fontSize: '1.25rem'}}/>
                     </button>
                 </div>
-
-                <div className=" my-4 flex justify-center border-2 w-[30px] border-blue-600">
+                {/* { arrayOfPages.map((page, index) => { return (
+                <div className=" my-4 flex justify-center border-2 w-[30px] border-blue-400">
+                    <button className="pagination-buttons" key={index} onClick={() => setPage(page)}>{page}</button>
+                </div>
+                )
+                })
+                } */}
+                <div className=" my-4 flex justify-center border-2 w-[30px] border-blue-400">
                     {page}
                 </div>
+
                 <div className="my-4">
                 <button className="pagination-buttons"
                     disabled={page >= totalPages} 
@@ -174,7 +196,7 @@ const FileDatabase = () => {
                 <div className="pagination-buttons" onClick={(e) => {setLimit(40); setPage(1)}}>40</div>
             </div>
             </div>   
-            <div className="flex gap-2 m-4"><p>prev:{page - 1} cur:{page} next:{page + 1}</p></div>
+            <div className="flex gap-2 m-4"><p>prev:{page - 1} cur:{page} next:{page + 1} </p></div>
         </div>
     </>
     );
